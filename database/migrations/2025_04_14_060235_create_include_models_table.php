@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('includes', function (Blueprint $table) {
             $table->id('include_id');
-            $table->unsignedBigInteger('pemesanan_id');
+            $table->unsignedBigInteger('paketwisata_id');
             $table->string('bensin', 225);
             $table->string('parkir', 225);
             $table->string('sopir', 225);

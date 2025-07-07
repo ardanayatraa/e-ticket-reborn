@@ -4,14 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>BALI OM TOURS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Midtrans Snap -->
+    <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
+    </script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
@@ -298,7 +301,7 @@
             margin-top: 0.25rem;
         }
 
-        /* NEW: Multiple car selection styles */
+        /* Multiple car selection styles */
         .car-selected {
             border-color: #0d9488 !important;
             background-color: rgba(13, 148, 136, 0.1) !important;
@@ -343,12 +346,47 @@
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             border: 2px solid #d97706;
         }
+
+        /* Member styles */
+        .member-badge {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .points-display {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+        }
+
+        /* Points redemption styles */
+        .points-section {
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            border: 2px solid #d1d5db;
+            border-radius: 12px;
+        }
+
+        .points-active {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-color: #3b82f6;
+        }
+
+        .discount-applied {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #16a34a;
+        }
     </style>
     @livewireStyles
 </head>
 
 <body class="bg-gray-50">
-    <!-- Navigation (unchanged) -->
+    <!-- Navigation -->
     <nav class="bg-white shadow-lg fixed w-full z-10">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
             @php
@@ -364,15 +402,58 @@
             </div>
 
             <!-- Desktop Menu -->
-            <div class="hidden md:flex space-x-8">
+            <div class="hidden md:flex space-x-8 items-center">
                 <a href="#beranda" class="text-gray-700 hover:text-teal-600 transition font-medium">Beranda</a>
                 <a href="#paket" class="text-gray-700 hover:text-teal-600 transition font-medium">Paket Wisata</a>
                 <a href="#tentang" class="text-gray-700 hover:text-teal-600 transition font-medium">Tentang Kami</a>
-                @guest
-                    <a href="/login" class="text-gray-700 hover:text-teal-600 transition font-medium">Login</a>
-                @endguest
-                @auth
-                    <a href="/dashboard" class="text-gray-700 hover:text-teal-600 transition font-medium">Dashboard</a>
+
+                @auth('pelanggan')
+                    <!-- Member Status & Points -->
+                    <div class="flex items-center space-x-3">
+                        @if (Auth::guard('pelanggan')->user()->is_member)
+                            <div class="member-badge">
+                                <i class="fas fa-crown mr-1"></i>MEMBER
+                            </div>
+                            <div class="points-display">
+                                <i class="fas fa-star mr-1"></i>{{ Auth::guard('pelanggan')->user()->points }} Poin
+                            </div>
+                        @else
+                            <button onclick="bukaModalMember()"
+                                class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition font-medium">
+                                <i class="fas fa-crown mr-1"></i>Upgrade Member
+                            </button>
+                        @endif
+
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="flex items-center text-gray-700 hover:text-teal-600 transition font-medium">
+                                <i class="fas fa-user-circle mr-2"></i>
+                                {{ Auth::guard('pelanggan')->user()->nama_pemesan }}
+                                <i class="fas fa-chevron-down ml-1"></i>
+                            </button>
+                            <div x-show="open" @click.away="open = false"
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-20">
+                                <button onclick="bukaModalDashboard()"
+                                    class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-tachometer-alt mr-2"></i>Riwayat
+                                </button>
+                                <button onclick="bukaModalProfile()"
+                                    class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user-edit mr-2"></i>Update Profil
+                                </button>
+                                <form method="POST" action="{{ route('logout') }}" class="block">
+                                    @csrf
+                                    <button type="submit"
+                                        class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <button onclick="bukaModalLogin()"
+                        class="text-gray-700 hover:text-teal-600 transition font-medium">Login</button>
                 @endauth
             </div>
 
@@ -394,18 +475,50 @@
             <a href="#tentang"
                 class="block py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">Tentang
                 Kami</a>
-            @guest
-                <a href="/login"
-                    class="block py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">Login</a>
-            @endguest
-            @auth
-                <a href="/dashboard"
-                    class="block py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">Dashboard</a>
+
+            @auth('pelanggan')
+                @if (!Auth::guard('pelanggan')->user()->is_member)
+                    <button onclick="bukaModalMember()"
+                        class="block w-full text-left py-4 px-4 text-orange-600 hover:text-orange-700 hover:bg-orange-50 rounded-lg transition font-medium">
+                        <i class="fas fa-crown mr-2"></i>Upgrade Member
+                    </button>
+                @endif
+                <button onclick="bukaModalDashboard()"
+                    class="block w-full text-left py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">
+                    <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                </button>
+                <button onclick="bukaModalProfile()"
+                    class="block w-full text-left py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">
+                    <i class="fas fa-user-edit mr-2"></i>Update Profil
+                </button>
+                <form method="POST" action="{{ route('pelanggan.logout') }}" class="block">
+                    @csrf
+                    <button type="submit"
+                        class="block w-full text-left py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </button>
+                </form>
+            @else
+                <button onclick="bukaModalLogin()"
+                    class="block py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">Login</button>
             @endauth
         </div>
     </nav>
 
-    <!-- Paket Wisata Section (unchanged content, only package cards) -->
+    <!-- Hero Section -->
+    <section id="beranda" class="hero-gradient text-white py-20 pt-24">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Jelajahi Keindahan Bali</h1>
+            <p class="text-xl md:text-2xl mb-8 opacity-90">Nikmati pengalaman wisata tak terlupakan bersama Bali Om
+                Tours</p>
+            <a href="#paket"
+                class="inline-block bg-white text-teal-600 font-bold py-4 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-lg">
+                Lihat Paket Wisata
+            </a>
+        </div>
+    </section>
+
+    <!-- Paket Wisata Section -->
     <section id="paket" class="py-16 pt-24 sm:py-24 bg-white">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="text-center mb-6 sm:mb-12">
@@ -414,11 +527,10 @@
                     class="w-20 sm:w-24 h-1 bg-gradient-to-r from-teal-400 to-teal-600 mx-auto mb-4 sm:mb-6 rounded-full">
                 </div>
                 <p class="text-gray-600 max-w-3xl mx-auto text-base sm:text-lg px-2">Pilih paket wisata sesuai dengan
-                    kebutuhan dan budget Anda.
-                    Kami menawarkan berbagai pilihan destinasi menarik.</p>
+                    kebutuhan dan budget Anda. Kami menawarkan berbagai pilihan destinasi menarik.</p>
             </div>
 
-            <!-- Search Bar - Sticky on mobile -->
+            <!-- Search Bar -->
             <div id="searchBarContainer" class="max-w-md mx-auto mb-6 sm:mb-8 sticky-search">
                 <div class="relative">
                     <input type="text" id="searchPackage" placeholder="Cari paket wisata..."
@@ -432,7 +544,6 @@
                     </button>
                 </div>
 
-                <!-- Filter Indicator -->
                 <div id="filterIndicator" class="hidden mt-2 text-sm text-center">
                     <span class="bg-teal-100 text-teal-800 px-3 py-1 rounded-full inline-flex items-center">
                         <span id="resultCount">0</span> - paket ditemukan
@@ -460,44 +571,75 @@
                         data-category="bali" data-name="{{ strtolower($item->judul) }}"
                         data-location="{{ strtolower($item->tempat) }}">
                         <div class="relative">
-                            <img src="{{ $item->foto
-                                ? asset('storage/' . $item->foto)
-                                : 'https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1170&q=80' }}"
-                                alt="{{ $item->nama }}" class="w-full h-48 sm:h-56 object-cover" loading="lazy" />
+                            <img src="{{ $item->foto ? asset('storage/' . $item->foto) : 'https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1170&q=80' }}"
+                                alt="{{ $item->judul }}" class="w-full h-48 sm:h-56 object-cover" loading="lazy" />
                             @if ($item->created_at->diffInDays(now()) < 7)
                                 <span
                                     class="absolute top-3 left-3 bg-teal-100 text-teal-800 text-xs font-semibold px-3 py-1 rounded-full">Terbaru</span>
                             @endif
                         </div>
                         <div class="p-4 sm:p-6">
-                            <h3 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">{{ $item->judul }}
-                            </h3>
+                            <h3 class="text-lg sm:text-xl font-semibold mb-2 sm:mb-3 text-gray-800">
+                                {{ $item->judul }}</h3>
                             <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-3">
                                 {{ $item->deskripsi }}</p>
                             <div class="flex items-center mb-2">
                                 <i class="fas fa-map-marker-alt text-teal-600 mr-2"></i>
                                 <span class="text-sm sm:text-base text-gray-600">{{ $item->tempat }}</span>
                             </div>
-
-                            {{-- BADGE INCLUDE --}}
                             <div class="flex flex-wrap gap-2 mb-4">
-                                <span
-                                    class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
-                                    <i class="fas fa-gas-pump"></i> Bensin
-                                </span>
-                                <span
-                                    class="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
-                                    <i class="fas fa-user-tie"></i> Supir
-                                </span>
-                                <span
-                                    class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
-                                    <i class="fas fa-parking"></i> Parkir
-                                </span>
+                                @if ($item->include)
+                                    @if ($item->include->bensin)
+                                        <span
+                                            class="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <i class="fas fa-gas-pump"></i> Bensin
+                                        </span>
+                                    @endif
+
+                                    @if ($item->include->sopir)
+                                        <span
+                                            class="bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <i class="fas fa-user-tie"></i> Sopir
+                                        </span>
+                                    @endif
+
+                                    @if ($item->include->parkir)
+                                        <span
+                                            class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <i class="fas fa-parking"></i> Parkir
+                                        </span>
+                                    @endif
+
+                                    @if ($item->include->makan_siang)
+                                        <span
+                                            class="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <i class="fas fa-utensils"></i> Makan Siang
+                                        </span>
+                                    @endif
+
+                                    @if ($item->include->makan_malam)
+                                        <span
+                                            class="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <i class="fas fa-moon"></i> Makan Malam
+                                        </span>
+                                    @endif
+
+                                    @if ($item->include->tiket_masuk)
+                                        <span
+                                            class="bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-1 rounded-full flex items-center gap-1">
+                                            <i class="fas fa-ticket-alt"></i> Tiket Masuk
+                                        </span>
+                                    @endif
+                                @else
+                                    <!-- Fallback jika tidak ada data include -->
+                                    <span
+                                        class="bg-gray-100 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
+                                        <i class="fas fa-info-circle"></i> Info fasilitas belum tersedia
+                                    </span>
+                                @endif
                             </div>
-                            {{-- END BADGE INCLUDE --}}
 
                             <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mt-4">
-                                {{-- Info Harga --}}
                                 <div class="space-y-1">
                                     <span class="block text-xs text-gray-500 uppercase font-medium">Harga Mulai</span>
                                     <div class="flex items-baseline space-x-1">
@@ -508,16 +650,26 @@
                                             hari</span>
                                     </div>
                                 </div>
-                                <button
-                                    onclick="bukaStep1(
-                  {{ $item->paketwisata_id }},
-                  '{{ addslashes($item->judul) }}',
-                  {{ $item->harga }},
-                  '{{ $item->foto }}'
-                )"
-                                    class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white px-4 py-3 sm:py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-center">
-                                    Pilih Paket
-                                </button>
+
+                                <div class="flex flex-col gap-2">
+                                    <a href="{{ route('paket-wisata.detail', $item->slug) }}"
+                                        class="w-full sm:w-auto bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition-all duration-200 font-medium text-center text-sm inline-block">
+                                        <i class="fas fa-eye mr-1"></i> Lihat Detail
+                                    </a>
+
+                                    @auth('pelanggan')
+                                        <button
+                                            onclick="bukaStep1({{ $item->paketwisata_id }}, '{{ addslashes($item->judul) }}', {{ $item->harga }}, '{{ $item->foto }}')"
+                                            class="w-full sm:w-auto bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-center text-sm">
+                                            <i class="fas fa-calendar-check mr-1"></i> Pesan
+                                        </button>
+                                    @else
+                                        <button onclick="bukaModalLogin()"
+                                            class="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium text-center text-sm">
+                                            <i class="fas fa-sign-in-alt mr-1"></i> Login untuk Pesan
+                                        </button>
+                                    @endauth
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -533,21 +685,18 @@
             <div id="paginationInfo" class="text-center text-sm text-gray-500 mt-2 hidden">
                 Halaman <span id="currentPageInfo">1</span> dari <span id="totalPagesInfo">1</span>
             </div>
-
         </div>
     </section>
 
-    <!-- Tentang Kami Section (unchanged) -->
+    <!-- Tentang Kami Section -->
     <section id="tentang" class="py-12 sm:py-20 bg-gray-50">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="flex flex-col lg:flex-row items-center gap-8 lg:gap-16">
-                <!-- Gambar -->
                 <div class="w-full lg:w-1/2">
                     <img src="https://images.unsplash.com/photo-1566559532512-004a6df74db5?ixlib=rb-4.0.3&auto=format&fit=crop&w=1171&q=80"
                         alt="Wisata Indonesia"
                         class="rounded-2xl shadow-xl w-full object-cover h-64 sm:h-80 md:h-[400px]" loading="lazy" />
                 </div>
-                <!-- Teks -->
                 <div class="w-full lg:w-1/2 text-center lg:text-left">
                     <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">Tentang Bali Om Tour</h2>
                     <div
@@ -558,12 +707,6 @@
                         Om Tours is to share our personal experiences and the places we've found on our journey
                         throughout Indonesia. Here you will get all the necessary information about all your trips
                         throughout Indonesia without any kind of Pressure to buy.
-
-                        We are proud of our Repeating Customers and the many good Recommendations. Our professional
-                        Staffcrew will guide you with detailed Infos about all the activities and will give you the
-                        choice to decide in an comfortable atmosphere in all our Offices. All Activities sold in our
-                        Offices are permanently checked out about safety and comfortability,so You as our Guest will get
-                        an everlasting positive impression worth to remember.
                     </p>
                     <a href="#paket"
                         class="inline-block bg-gradient-to-r from-teal-500 to-teal-700 text-white font-medium py-3 px-6 sm:py-3 sm:px-8 rounded-lg hover:shadow-lg transition transform hover:-translate-y-1">
@@ -574,7 +717,469 @@
         </div>
     </section>
 
-    <!-- MODIFIED: Enhanced Booking Modal with Multiple Car Selection -->
+    <!-- Login Modal -->
+    <div id="modalLogin"
+        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Login Pelanggan</h3>
+                    <button onclick="tutupModalLogin()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div id="loginError" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <p class="text-red-600 text-sm"></p>
+                </div>
+
+                <form id="formLogin" class="space-y-6">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" name="password" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" name="remember"
+                                class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                            <span class="ml-2 text-sm text-gray-600">Ingat saya</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" id="tombolLogin"
+                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Masuk
+                    </button>
+                </form>
+
+                <div class="text-center mt-6">
+                    <p class="text-gray-600">
+                        Belum punya akun?
+                        <button onclick="bukaModalRegister()" class="text-teal-600 hover:text-teal-700 font-medium">
+                            Daftar di sini
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="modalRegister"
+        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Daftar Pelanggan</h3>
+                    <button onclick="tutupModalRegister()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div id="registerError" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <p class="text-red-600 text-sm"></p>
+                </div>
+
+                <form id="formRegister" class="space-y-6">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                        <input type="text" name="nama_pemesan" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <input type="email" name="email" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nomor WhatsApp</label>
+                        <input type="text" name="nomor_whatsapp" required placeholder="08xxxxxxxxxx"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                        <textarea name="alamat" rows="3" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <input type="password" name="password" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
+                        <input type="password" name="password_confirmation" required
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <button type="submit" id="tombolRegister"
+                        class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200">
+                        <i class="fas fa-user-plus mr-2"></i>
+                        Daftar
+                    </button>
+                </form>
+
+                <div class="text-center mt-6">
+                    <p class="text-gray-600">
+                        Sudah punya akun?
+                        <button onclick="bukaModalLogin()" class="text-teal-600 hover:text-teal-700 font-medium">
+                            Masuk di sini
+                        </button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Member Upgrade Modal -->
+    <div id="modalMember"
+        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Upgrade ke Member</h3>
+                    <button onclick="tutupModalMember()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div class="text-center mb-8">
+                    <div class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white p-6 rounded-xl mb-6">
+                        <i class="fas fa-crown text-4xl mb-3"></i>
+                        <h4 class="text-xl font-bold">Menjadi Member Premium</h4>
+                        <p class="text-yellow-100 mt-2">Dapatkan berbagai keuntungan eksklusif</p>
+                    </div>
+
+                    <div class="text-3xl font-bold text-orange-600 mb-6">
+                        Hanya Rp 25.000
+                    </div>
+
+                    <div class="bg-blue-50 rounded-lg p-4 mb-6 text-left">
+                        <h5 class="font-bold text-blue-800 mb-3">Keuntungan Member:</h5>
+                        <ul class="text-sm text-blue-700 space-y-2">
+                            <li class="flex items-center">
+                                <i class="fas fa-star text-blue-600 mr-2"></i>
+                                Dapatkan poin setiap pembelian
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                Setiap Rp 500.000 = 3 poin
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-tags text-blue-600 mr-2"></i>
+                                10 poin = Rp 10.000 potongan
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-priority-high text-blue-600 mr-2"></i>
+                                Akses prioritas booking
+                            </li>
+                        </ul>
+                    </div>
+
+                    <button onclick="bayarMember()" id="tombolBayarMember"
+                        class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 px-6 rounded-lg hover:shadow-lg transition-all duration-200">
+                        <i class="fas fa-credit-card mr-2"></i>
+                        Bayar Sekarang
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Modal -->
+    <div id="modalDashboard"
+        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-content max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Dashboard Member</h3>
+                    <button onclick="tutupModalDashboard()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                @auth('pelanggan')
+                    <div class="grid lg:grid-cols-3 gap-6">
+                        <!-- Member Status -->
+                        <div class="bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4">Status Keanggotaan</h4>
+
+                            @if (Auth::guard('pelanggan')->user()->is_member)
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                                            <span class="font-medium text-green-800">Status Member Aktif</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                        <div class="flex items-center">
+                                            <i class="fas fa-star text-blue-600 mr-3"></i>
+                                            <span class="font-medium text-blue-800">Total Poin</span>
+                                        </div>
+                                        <span
+                                            class="text-2xl font-bold text-blue-600">{{ Auth::guard('pelanggan')->user()->points }}</span>
+                                    </div>
+
+                                    <div class="p-4 bg-yellow-50 rounded-lg">
+                                        <p class="text-sm text-yellow-800">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            Member sejak:
+                                            {{ Auth::guard('pelanggan')->user()->member_since->format('d M Y') }}
+                                        </p>
+                                    </div>
+
+                                    <!-- Points Redemption Section -->
+
+                                </div>
+                            @else
+                                <div class="text-center p-6 bg-orange-50 rounded-lg">
+                                    <i class="fas fa-crown text-orange-600 text-3xl mb-3"></i>
+                                    <h5 class="font-bold text-orange-800 mb-2">Belum Member</h5>
+                                    <p class="text-orange-700 text-sm mb-4">Upgrade sekarang untuk mendapatkan berbagai
+                                        keuntungan</p>
+                                    <button onclick="tutupModalDashboard(); bukaModalMember();"
+                                        class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+                                        Upgrade Member
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+
+                        <!-- Recent Bookings -->
+                        <div class="lg:col-span-2 bg-gray-50 rounded-xl p-6">
+                            <h4 class="text-lg font-bold text-gray-800 mb-4">Riwayat Pemesanan</h4>
+
+                            @if (Auth::guard('pelanggan')->user()->pemesanans->count() > 0)
+                                <div class="space-y-4 max-h-96 overflow-y-auto">
+                                    @foreach (Auth::guard('pelanggan')->user()->pemesanans->sortByDesc('created_at')->take(10) as $pemesanan)
+                                        <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+                                            <div class="flex justify-between items-start mb-3">
+                                                <div class="flex-1">
+                                                    <h5 class="font-semibold text-gray-800 text-base">
+                                                        {{ $pemesanan->paketWisata->judul }}
+                                                    </h5>
+                                                    <p class="text-sm text-gray-600 mt-1">
+                                                        <i class="fas fa-calendar mr-1"></i>
+                                                        {{ \Carbon\Carbon::parse($pemesanan->tanggal_keberangkatan)->format('d M Y') }}
+                                                        <span class="ml-3">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            {{ $pemesanan->jam_mulai }}
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                                <div class="text-right">
+                                                    @if ($pemesanan->transaksi && $pemesanan->transaksi->transaksi_status == 'paid')
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                            <i class="fas fa-check-circle mr-1"></i>
+                                                            Lunas
+                                                        </span>
+                                                    @elseif($pemesanan->transaksi && $pemesanan->transaksi->transaksi_status == 'pending')
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                            <i class="fas fa-clock mr-1"></i>
+                                                            Pending
+                                                        </span>
+                                                    @else
+                                                        <span
+                                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                            <i class="fas fa-question-circle mr-1"></i>
+                                                            Belum Bayar
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            </div>
+
+                                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <span class="text-gray-500">Mobil:</span>
+                                                    <p class="font-medium text-gray-800">
+                                                        {{ $pemesanan->mobil->nama_kendaraan ?? 'N/A' }}</p>
+                                                </div>
+                                                <div>
+                                                    <span class="text-gray-500">Peserta:</span>
+                                                    <p class="font-medium text-gray-800">{{ $pemesanan->jumlah_peserta }}
+                                                        orang</p>
+                                                </div>
+                                                <div>
+                                                    <span class="text-gray-500">Total Harga:</span>
+                                                    <p class="font-semibold text-teal-600">
+                                                        Rp
+                                                        {{ number_format($pemesanan->transaksi->total_transaksi ?? $pemesanan->paketWisata->harga, 0, ',', '.') }}
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <span class="text-gray-500">Tanggal Pesan:</span>
+                                                    <p class="font-medium text-gray-800">
+                                                        {{ $pemesanan->created_at->format('d M Y') }}</p>
+                                                </div>
+                                            </div>
+
+                                            @if ($pemesanan->transaksi && $pemesanan->transaksi->transaksi_status == 'paid')
+                                                <div class="mt-3 pt-3 border-t border-gray-200">
+                                                    <div class="flex items-center justify-between">
+                                                        <span class="text-sm text-green-600 font-medium flex items-center">
+                                                            <i class="fas fa-ticket-alt mr-1"></i>
+                                                            E-ticket tersedia
+
+                                                            <!-- Tombol download -->
+                                                            <a href="{{ route('download.eticket', ['transaksi' => $pemesanan->transaksi->transaksi_id]) }}"
+                                                                class="ml-3 text-sm text-white bg-green-500 hover:bg-green-600 px-3 py-1 rounded inline-flex items-center"
+                                                                target="_blank">
+                                                                <i class="fas fa-download mr-1"></i> Download
+                                                            </a>
+                                                        </span>
+
+                                                        @if (Auth::guard('pelanggan')->user()->is_member && $pemesanan->transaksi->deposit)
+                                                            @php
+                                                                $pointsEarned =
+                                                                    floor($pemesanan->transaksi->deposit / 500000) * 5;
+                                                            @endphp
+                                                            @if ($pointsEarned > 0)
+                                                                <span class="text-sm text-blue-600 font-medium">
+                                                                    <i class="fas fa-star mr-1"></i>
+                                                                    +{{ $pointsEarned }} poin
+                                                                </span>
+                                                            @endif
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-12">
+                                    <i class="fas fa-calendar-times text-gray-400 text-4xl mb-4"></i>
+                                    <h5 class="text-lg font-semibold text-gray-700 mb-2">Belum ada pemesanan</h5>
+                                    <p class="text-gray-500 mb-4">Mulai jelajahi paket wisata kami dan buat pemesanan
+                                        pertama Anda</p>
+                                    <button
+                                        onclick="tutupModalDashboard(); document.getElementById('paket').scrollIntoView({behavior: 'smooth'});"
+                                        class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition">
+                                        Lihat Paket Wisata
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endauth
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Update Modal -->
+    <div id="modalProfile"
+        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800">Update Profil</h3>
+                    <button onclick="tutupModalProfile()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div id="profileError" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <p class="text-red-600 text-sm"></p>
+                </div>
+
+                <div id="profileSuccess" class="hidden bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                    <p class="text-green-600 text-sm"></p>
+                </div>
+
+                @auth('pelanggan')
+                    <form id="formProfile" class="space-y-6">
+                        @csrf
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                            <input type="text" name="nama_pemesan"
+                                value="{{ Auth::guard('pelanggan')->user()->nama_pemesan }}" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" name="email" value="{{ Auth::guard('pelanggan')->user()->email }}"
+                                required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nomor WhatsApp</label>
+                            <input type="text" name="nomor_whatsapp"
+                                value="{{ Auth::guard('pelanggan')->user()->nomor_whatsapp }}" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Alamat</label>
+                            <textarea name="alamat" rows="3" required
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">{{ Auth::guard('pelanggan')->user()->alamat }}</textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Password Baru (Kosongkan jika tidak
+                                ingin mengubah)</label>
+                            <input type="password" name="password"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password Baru</label>
+                            <input type="password" name="password_confirmation"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+
+                        <button type="submit" id="tombolUpdateProfile"
+                            class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200">
+                            <i class="fas fa-save mr-2"></i>
+                            Update Profil
+                        </button>
+                    </form>
+                @endauth
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Paket Modal -->
+    <div id="modalDetailPaket"
+        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl modal-content max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="detailPaketJudul" class="text-2xl font-bold text-gray-800"></h3>
+                    <button onclick="tutupModalDetailPaket()" class="text-gray-500 hover:text-gray-700 p-2">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <div id="detailPaketContent" class="space-y-6">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Booking Modal (Enhanced) -->
     <div id="kontainerPicker"
         class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-start justify-center p-0 z-50 backdrop-blur-sm overflow-y-auto">
         <div
@@ -584,7 +1189,6 @@
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
                         <h4 class="text-lg sm:text-2xl font-bold text-gray-800">1. Pilih Tanggal & Mobil</h4>
-                        <!-- NEW: Selected cars counter -->
                         <div id="selectedCarsCounter"
                             class="hidden bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
                             <i class="fas fa-car mr-1"></i>
@@ -596,7 +1200,6 @@
                     </button>
                 </div>
 
-                <!-- ADDED: Booking Time Restriction Warning -->
                 <div id="peringatanWaktuBooking"
                     class="hidden mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
                     <div class="flex items-center">
@@ -608,7 +1211,6 @@
                     </div>
                 </div>
 
-                <!-- NEW: Multiple booking warning -->
                 <div id="peringatanMultipleBooking" class="hidden mb-4 p-4 multiple-booking-warning rounded-lg">
                     <div class="flex items-center">
                         <i class="fas fa-exclamation-circle text-orange-800 mr-3 text-xl"></i>
@@ -633,7 +1235,6 @@
                                 class="w-full cursor-pointer rounded-lg border border-gray-300 shadow-sm py-3 px-3 focus:outline-none focus:ring-2 focus:ring-teal-500 text-center font-medium text-sm sm:text-base"
                                 readonly placeholder="Pilih Tanggal" />
 
-                            <!-- Loading indicator for date selection -->
                             <div id="indikatorLoadingTanggal" class="hidden mt-2">
                                 <div class="flex items-center justify-center space-x-2 text-sm text-gray-500">
                                     <div class="loading-spinner"></div>
@@ -654,14 +1255,12 @@
                     <div class="w-full lg:w-1/2">
                         <div class="flex justify-between items-center mb-3">
                             <h5 class="font-medium text-gray-700 text-base sm:text-lg">Mobil Tersedia</h5>
-                            <!-- NEW: Clear selection button -->
                             <button id="tombolResetPilihan" onclick="resetPilihanMobil()"
                                 class="hidden text-sm text-red-600 hover:text-red-800 font-medium">
                                 <i class="fas fa-undo mr-1"></i> Reset Pilihan
                             </button>
                         </div>
 
-                        <!-- MODIFIED: No vehicles available message -->
                         <div id="pesanTidakAdaMobil" class="hidden text-center py-8">
                             <div class="text-gray-500 mb-4">
                                 <i class="fas fa-car text-4xl"></i>
@@ -703,7 +1302,7 @@
                 </div>
             </div>
 
-            {{-- STEP 2 - MODIFIED for Multiple Bookings --}}
+            {{-- STEP 2 --}}
             <div id="step2" class="hidden p-4 sm:p-6 bg-gray-50 max-h-screen overflow-y-auto">
                 <div class="flex justify-between items-center mb-4">
                     <h4 class="text-lg sm:text-2xl font-bold text-gray-800">2. Lengkapi Data Pemesan</h4>
@@ -712,14 +1311,12 @@
                     </button>
                 </div>
 
-                {{-- PREVIEW FOTO --}}
                 <div id="wrapperPreviewFoto" class="hidden mb-4 sm:mb-6">
                     <img id="previewFoto" src="/placeholder.svg" alt="Foto Paket"
                         class="w-full h-40 sm:h-48 object-cover rounded-xl shadow-md" />
                 </div>
 
-                <form action="{{ route('pemesanan.store') }}" method="POST"
-                    class="flex flex-col lg:flex-row lg:gap-6">
+                <form id="formBooking" class="flex flex-col lg:flex-row lg:gap-6">
                     @csrf
 
                     {{-- Ringkasan Pemesanan --}}
@@ -753,17 +1350,72 @@
                                 </li>
                                 <li class="flex items-center p-2 hover:bg-gray-50 rounded-lg transition">
                                     <i class="fas fa-tag text-teal-600 w-5 sm:w-6 text-center"></i>
-                                    <span class="ml-2 sm:ml-3 font-medium">Total Harga:</span>
-                                    <span id="previewHarga" class="ml-auto font-semibold text-teal-600"></span>
+                                    <span class="ml-2 sm:ml-3 font-medium">Subtotal:</span>
+                                    <span id="previewSubtotal" class="ml-auto font-semibold text-gray-800"></span>
                                 </li>
                             </ul>
+
+                            <!-- Points Redemption Section for Members -->
+                            @auth('pelanggan')
+                                @if (Auth::guard('pelanggan')->user()->is_member && Auth::guard('pelanggan')->user()->points >= 10)
+                                    <div id="pointsRedemptionSection" class="mt-4 p-4 points-section rounded-lg">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h6 class="font-semibold text-gray-700">Tukar Poin</h6>
+                                            <div class="text-sm text-blue-600 font-medium">
+                                                <i class="fas fa-star mr-1"></i>
+                                                {{ Auth::guard('pelanggan')->user()->points }} poin tersedia
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-3">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" id="usePoints" onchange="togglePointsRedemption()"
+                                                    class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                                <label for="usePoints" class="ml-2 text-sm text-gray-700">
+                                                    Gunakan poin untuk potongan harga
+                                                </label>
+                                            </div>
+
+                                            <div id="pointsInputSection" class="hidden">
+                                                <div class="flex items-center space-x-2">
+                                                    <input type="number" id="pointsToUse" min="10"
+                                                        max="{{ Auth::guard('pelanggan')->user()->points }}"
+                                                        step="10" placeholder="10"
+                                                        onchange="calculatePointsDiscount()"
+                                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
+                                                    <span class="text-sm text-gray-600">poin</span>
+                                                </div>
+                                                <p class="text-xs text-gray-500 mt-1">
+                                                    10 poin = Rp 10.000 potongan (kelipatan 10)
+                                                </p>
+                                                <div id="pointsDiscountPreview"
+                                                    class="hidden mt-2 text-sm font-medium text-green-600">
+                                                    Potongan: <span id="discountAmount">Rp 0</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endauth
+
+                            <!-- Final Total -->
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-lg font-bold text-gray-800">Total Bayar:</span>
+                                    <span id="previewHarga" class="text-xl font-bold text-teal-600"></span>
+                                </div>
+                                <div id="savingsInfo" class="hidden mt-1 text-sm text-green-600 font-medium">
+                                    <i class="fas fa-tag mr-1"></i>
+                                    Hemat <span id="totalSavings">Rp 0</span> dengan poin!
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Hidden fields --}}
                         <input type="hidden" name="paket_id" id="inputPaketId">
                         <input type="hidden" name="tanggal" id="inputTanggal">
                         <input type="hidden" name="jam_mulai" id="inputWaktu">
-                        <!-- NEW: Multiple car inputs -->
+                        <input type="hidden" name="points_used" id="inputPointsUsed" value="0">
                         <div id="hiddenMobilInputs">
                             <!-- Will be populated by JavaScript -->
                         </div>
@@ -771,41 +1423,6 @@
 
                     {{-- Form Data Pemesan --}}
                     <div class="w-full lg:w-1/2 space-y-4">
-                        <!-- Basic customer info -->
-                        <div class="bg-white p-4 sm:p-5 rounded-xl shadow-lg space-y-3 sm:space-y-4">
-                            <h5 class="text-base sm:text-lg font-semibold text-gray-700 mb-1 sm:mb-2">Detail Pemesan
-                            </h5>
-                            <label class="block">
-                                <span class="text-gray-600 font-medium text-sm sm:text-base">Nama Pemesan</span>
-                                <input type="text" name="nama_pemesan" required
-                                    class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
-                                    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
-                                    placeholder="Masukkan nama lengkap" />
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-600 font-medium text-sm sm:text-base">Email</span>
-                                <input type="email" name="email" required
-                                    class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
-                                    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
-                                    placeholder="contoh@email.com" />
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-600 font-medium text-sm sm:text-base">Alamat</span>
-                                <input type="text" name="alamat" required
-                                    class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
-                                    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
-                                    placeholder="Masukkan alamat lengkap" />
-                            </label>
-                            <label class="block">
-                                <span class="text-gray-600 font-medium text-sm sm:text-base">Nomor WhatsApp</span>
-                                <input type="text" name="nomor_whatsapp" required
-                                    class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
-                                    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
-                                    placeholder="08xxxxxxxxxx" />
-                            </label>
-                        </div>
-
-                        <!-- NEW: Dynamic participant inputs for each car -->
                         <div id="participantInputsContainer">
                             <!-- Will be populated by JavaScript -->
                         </div>
@@ -816,7 +1433,7 @@
                                 class="px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition font-medium text-sm sm:text-base">
                                 <i class="fas fa-arrow-left mr-2"></i> Kembali
                             </button>
-                            <button type="button" onclick="tampilkanModalKonfirmasi()" id="tombolKonfirmasiBooking"
+                            <button type="button" onclick="prosesBooking()" id="tombolKonfirmasiBooking"
                                 class="px-4 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg shadow-md hover:shadow-lg transition font-medium text-sm sm:text-base">
                                 Konfirmasi & Bayar <i class="fas fa-check ml-2"></i>
                             </button>
@@ -827,20 +1444,17 @@
         </div>
     </div>
 
-    <!-- NEW: Multiple Booking Confirmation Modal -->
+    <!-- Multiple Booking Confirmation Modal -->
     <div id="modalKonfirmasiMultiple"
         class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-content">
             <div class="p-6 text-center">
-                <!-- Warning Icon -->
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
                     <i class="fas fa-exclamation-triangle text-orange-600 text-2xl"></i>
                 </div>
 
-                <!-- Title -->
                 <h3 class="text-xl font-bold text-gray-900 mb-4">Konfirmasi Multiple Booking</h3>
 
-                <!-- Message -->
                 <div class="text-gray-600 text-sm space-y-3 mb-6">
                     <p class="font-medium">Apakah Anda yakin ingin memesan <strong
                             id="konfirmasiJumlahMobil">0</strong> mobil sekaligus?</p>
@@ -854,7 +1468,6 @@
                     </div>
                 </div>
 
-                <!-- Action Buttons -->
                 <div class="flex space-x-3">
                     <button onclick="batalkanMultipleBooking()"
                         class="flex-1 bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-200 transition">
@@ -869,63 +1482,48 @@
         </div>
     </div>
 
-    <!-- MODIFIED: Success Confirmation Modal -->
+    <!-- Success Confirmation Modal -->
     <div id="modalKonfirmasi"
         class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
             <div class="p-6 text-center">
-                <!-- Success Icon -->
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
                     <i class="fas fa-check text-green-600 text-2xl"></i>
                 </div>
 
-                <!-- Title -->
                 <h3 class="text-xl font-bold text-gray-900 mb-4">Booking Berhasil!</h3>
 
-                <!-- Message -->
                 <div class="text-gray-600 text-sm space-y-3 mb-6">
                     <p class="font-medium">
-                        <span id="pesanSukses">E-ticket akan didapatkan setelah melakukan pembayaran</span>
+                        <span id="pesanSukses">Booking berhasil dibuat</span>
                     </p>
                 </div>
 
-                <!-- Important Info -->
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 text-left">
                     <h4 class="font-semibold text-blue-800 text-sm mb-2">
                         <i class="fas fa-info-circle mr-1"></i> Informasi Penting:
                     </h4>
                     <ul class="text-blue-700 text-xs space-y-1">
                         <li>• Untuk booking online besok atau 1 hari setelahnya, customer hanya bisa booking maksimal
-                            jam 17:00</li>
-                        <li>• Jika di atas jam 17:00, semua mobil tidak tersedia karena kantor tutup jam 21:00</li>
-                        <li>• Setiap booking masuk, mobil akan di-hold selama 4 jam dan tidak tersedia di masa holding
-                        </li>
-                        <li>• Jika belum terkonfirmasi dalam 4 jam, mobil akan tersedia lagi</li>
+                            jam 21:00</li>
+                        <li>• Jika di atas jam 21:00, semua mobil tidak tersedia karena kantor tutup jam 21:00</li>
+
                     </ul>
                 </div>
 
-                <!-- Action Button -->
-                <button onclick="konfirmasiDanSubmit()"
+                <button onclick="tutupModalKonfirmasi()"
                     class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-medium py-3 px-6 rounded-lg hover:shadow-lg transition">
-                    Konfirmasi
+                    OK
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Footer (unchanged) -->
+    <!-- Footer -->
     <footer class="bg-gray-800 text-white py-8 sm:py-12">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
                 <div class="text-center md:text-left">
-                    @php
-                        $path = public_path('assets/img/baliomtour.png');
-                        $type = pathinfo($path, PATHINFO_EXTENSION);
-                        $data = file_get_contents($path);
-                        $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
-                    @endphp
-
-                    <!-- Logo -->
                     <div class="flex items-center mb-3 gap-3">
                         <img src="{{ $base64 }}" alt="Logo Bali Om" class="h-10 w-auto">
                     </div>
@@ -986,74 +1584,652 @@
 
     <!-- JavaScript -->
     <script>
+        // Global variables
+        const urlStorage = "{{ asset('storage') }}";
+        const urlApi = "{{ route('check-availability') }}";
+        const isLoggedIn = {{ Auth::guard('pelanggan')->check() ? 'true' : 'false' }};
+        const currentUser = @json(Auth::guard('pelanggan')->user());
+
+        // State untuk menyimpan pilihan
+        const terpilih = {
+            paketId: null,
+            paketNama: '',
+            harga: 0,
+            tanggal: '',
+            waktu: '',
+            fotoPath: '',
+            mobil: [],
+            pointsUsed: 0,
+            discount: 0
+        };
+
+        // Menu toggle
         const menuToggle = document.getElementById('menu-toggle');
         const mobileMenu = document.getElementById('mobile-menu');
 
         menuToggle.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
-    </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // URL dasar untuk storage
-            const urlStorage = "{{ asset('storage') }}";
-            const urlApi = "{{ route('check-availability') }}";
+        // Modal functions
+        function bukaModalLogin() {
+            document.getElementById('modalLogin').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
 
-            // State untuk menyimpan pilihan
-            const terpilih = {
-                paketId: null,
-                paketNama: '',
-                harga: 0,
-                tanggal: '',
-                waktu: '',
-                fotoPath: '',
-                // NEW: Array untuk menyimpan multiple mobil
-                mobil: []
-            };
+        function tutupModalLogin() {
+            document.getElementById('modalLogin').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
-            // Elemen UI
-            const indikatorLoadingTanggal = document.getElementById('indikatorLoadingTanggal');
-            const pesanTidakAdaMobil = document.getElementById('pesanTidakAdaMobil');
-            const tombolLanjutStep = document.getElementById('tombolLanjutStep');
-            const daftarKendaraan = document.getElementById('daftarKendaraan');
-            const peringatanWaktuBooking = document.getElementById('peringatanWaktuBooking');
-            const peringatanMultipleBooking = document.getElementById('peringatanMultipleBooking');
-            const selectedCarsCounter = document.getElementById('selectedCarsCounter');
-            const selectedCarsCount = document.getElementById('selectedCarsCount');
-            const jumlahMobilDipesan = document.getElementById('jumlahMobilDipesan');
-            const konfirmasiJumlahMobil = document.getElementById('konfirmasiJumlahMobil');
-            const tombolResetPilihan = document.getElementById('tombolResetPilihan');
+        function bukaModalRegister() {
+            tutupModalLogin();
+            document.getElementById('modalRegister').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
 
-            // DIPERBAIKI: Cek apakah booking diizinkan berdasarkan pembatasan waktu
-            function apakahBookingDiizinkan(tanggalTerpilih) {
-                const sekarang = new Date();
-                const terpilih = new Date(tanggalTerpilih);
-                const besok = new Date();
-                besok.setDate(besok.getDate() + 1);
+        function tutupModalRegister() {
+            document.getElementById('modalRegister').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
 
-                // Jika booking untuk besok dan waktu sekarang sudah lewat jam 17:00
-                if (terpilih.toDateString() === besok.toDateString()) {
-                    const jamSekarang = sekarang.getHours();
-                    if (jamSekarang >= 17) {
-                        return false;
+        function bukaModalMember() {
+            document.getElementById('modalMember').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function tutupModalMember() {
+            document.getElementById('modalMember').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function bukaModalDashboard() {
+            document.getElementById('modalDashboard').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function tutupModalDashboard() {
+            document.getElementById('modalDashboard').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function bukaModalProfile() {
+            document.getElementById('modalProfile').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function tutupModalProfile() {
+            document.getElementById('modalProfile').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function bukaModalDetailPaket() {
+            document.getElementById('modalDetailPaket').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function tutupModalDetailPaket() {
+            document.getElementById('modalDetailPaket').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Login form handler
+        document.getElementById('formLogin').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const tombolLogin = document.getElementById('tombolLogin');
+            const loginError = document.getElementById('loginError');
+
+            tombolLogin.disabled = true;
+            tombolLogin.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+            loginError.classList.add('hidden');
+
+            try {
+                const response = await fetch('/pelanggan/login', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
                     }
-                }
+                });
 
-                return true;
-            }
-
-            // Tampilkan/sembunyikan peringatan waktu booking
-            function perbaruiPeringatanWaktuBooking(tanggalTerpilih) {
-                if (!apakahBookingDiizinkan(tanggalTerpilih)) {
-                    peringatanWaktuBooking.classList.remove('hidden');
+                if (response.ok) {
+                    window.location.reload();
                 } else {
-                    peringatanWaktuBooking.classList.add('hidden');
+                    const data = await response.json();
+                    loginError.querySelector('p').textContent = data.message || 'Email atau password salah.';
+                    loginError.classList.remove('hidden');
+                }
+            } catch (error) {
+                loginError.querySelector('p').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                loginError.classList.remove('hidden');
+            } finally {
+                tombolLogin.disabled = false;
+                tombolLogin.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Masuk';
+            }
+        });
+
+        // Register form handler
+        document.getElementById('formRegister').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const tombolRegister = document.getElementById('tombolRegister');
+            const registerError = document.getElementById('registerError');
+
+            tombolRegister.disabled = true;
+            tombolRegister.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+            registerError.classList.add('hidden');
+
+            try {
+                const response = await fetch('/pelanggan/register', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    registerError.querySelector('p').textContent = data.message ||
+                        'Terjadi kesalahan saat mendaftar.';
+                    registerError.classList.remove('hidden');
+                }
+            } catch (error) {
+                registerError.querySelector('p').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                registerError.classList.remove('hidden');
+            } finally {
+                tombolRegister.disabled = false;
+                tombolRegister.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Daftar';
+            }
+        });
+
+        // Profile update form handler
+        document.getElementById('formProfile').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const tombolUpdate = document.getElementById('tombolUpdateProfile');
+            const profileError = document.getElementById('profileError');
+            const profileSuccess = document.getElementById('profileSuccess');
+
+            tombolUpdate.disabled = true;
+            tombolUpdate.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+            profileError.classList.add('hidden');
+            profileSuccess.classList.add('hidden');
+
+            try {
+                const response = await fetch('/pelanggan/profile/update', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    profileSuccess.querySelector('p').textContent = data.message;
+                    profileSuccess.classList.remove('hidden');
+
+                    // Refresh page after 2 seconds to show updated data
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    profileError.querySelector('p').textContent = data.message ||
+                        'Terjadi kesalahan saat memperbarui profil.';
+                    profileError.classList.remove('hidden');
+                }
+            } catch (error) {
+                profileError.querySelector('p').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                profileError.classList.remove('hidden');
+            } finally {
+                tombolUpdate.disabled = false;
+                tombolUpdate.innerHTML = '<i class="fas fa-save mr-2"></i>Update Profil';
+            }
+        });
+
+        // Points redemption functions
+        function tukarPoin() {
+            const pointsToRedeem = parseInt(document.getElementById('pointsToRedeem').value);
+
+            if (!pointsToRedeem || pointsToRedeem < 10 || pointsToRedeem % 10 !== 0) {
+                alert('Masukkan jumlah poin yang valid (minimal 10, kelipatan 10)');
+                return;
+            }
+
+            if (pointsToRedeem > currentUser.points) {
+                alert('Poin tidak mencukupi');
+                return;
+            }
+
+            if (confirm(
+                    `Apakah Anda yakin ingin menukar ${pointsToRedeem} poin menjadi Rp ${(pointsToRedeem / 10 * 10000).toLocaleString('id-ID')}?`
+                )) {
+                fetch('/pelanggan/redeem-points', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify({
+                            points_to_redeem: pointsToRedeem
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            window.location.reload();
+                        } else {
+                            alert(data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan saat menukar poin');
+                    });
+            }
+        }
+
+        function togglePointsRedemption() {
+            const usePoints = document.getElementById('usePoints').checked;
+            const pointsInputSection = document.getElementById('pointsInputSection');
+            const pointsSection = document.getElementById('pointsRedemptionSection');
+
+            if (usePoints) {
+                pointsInputSection.classList.remove('hidden');
+                pointsSection.classList.add('points-active');
+                // Set default value
+                document.getElementById('pointsToUse').value = 10;
+                calculatePointsDiscount();
+            } else {
+                pointsInputSection.classList.add('hidden');
+                pointsSection.classList.remove('points-active', 'discount-applied');
+                document.getElementById('pointsDiscountPreview').classList.add('hidden');
+                terpilih.pointsUsed = 0;
+                terpilih.discount = 0;
+                updateTotalPrice();
+            }
+        }
+
+        function calculatePointsDiscount() {
+            const pointsToUse = parseInt(document.getElementById('pointsToUse').value) || 0;
+            const maxPoints = currentUser ? currentUser.points : 0;
+
+            // Validate points
+            if (pointsToUse > maxPoints) {
+                document.getElementById('pointsToUse').value = maxPoints;
+                return calculatePointsDiscount();
+            }
+
+            if (pointsToUse % 10 !== 0) {
+                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / 10) * 10;
+                return calculatePointsDiscount();
+            }
+
+            const discount = (pointsToUse / 10) * 10000;
+
+            terpilih.pointsUsed = pointsToUse;
+            terpilih.discount = discount;
+
+            if (pointsToUse > 0) {
+                document.getElementById('discountAmount').textContent = 'Rp ' + discount.toLocaleString('id-ID');
+                document.getElementById('pointsDiscountPreview').classList.remove('hidden');
+                document.getElementById('pointsRedemptionSection').classList.add('discount-applied');
+            } else {
+                document.getElementById('pointsDiscountPreview').classList.add('hidden');
+                document.getElementById('pointsRedemptionSection').classList.remove('discount-applied');
+            }
+
+            updateTotalPrice();
+        }
+
+        function updateTotalPrice() {
+            let totalHarga = 0;
+            terpilih.mobil.forEach(() => {
+                totalHarga += terpilih.harga;
+            });
+
+            const subtotal = totalHarga;
+            const finalTotal = Math.max(0, subtotal - terpilih.discount);
+
+            document.getElementById('previewSubtotal').innerText = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(subtotal);
+
+            document.getElementById('previewHarga').innerText = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0
+            }).format(finalTotal);
+
+            // Show savings info
+            if (terpilih.discount > 0) {
+                document.getElementById('totalSavings').textContent = 'Rp ' + terpilih.discount.toLocaleString('id-ID');
+                document.getElementById('savingsInfo').classList.remove('hidden');
+            } else {
+                document.getElementById('savingsInfo').classList.add('hidden');
+            }
+        }
+
+        // Member payment function
+        function bayarMember() {
+            if (!isLoggedIn) {
+                tutupModalMember();
+                bukaModalLogin();
+                return;
+            }
+
+            const tombolBayar = document.getElementById('tombolBayarMember');
+            tombolBayar.disabled = true;
+            tombolBayar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+
+            // Create member payment order
+            fetch('/member/upgrade', {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.snap_token) {
+                        snap.pay(data.snap_token, {
+                            onSuccess: function(result) {
+                                console.log("Hasil pembayaran:", result);
+                                alert("Pembayaran berhasil! Anda sekarang adalah member.");
+
+                                // Jika mau kirim data ke server (tanpa callback Midtrans)
+                                fetch('/member/payment/success', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector(
+                                                'meta[name="csrf-token"]').getAttribute('content')
+                                        },
+                                        body: JSON.stringify(result)
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        console.log(data.message);
+                                        window.location.reload();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        alert("Terjadi kesalahan saat memperbarui status member.");
+                                    });
+                            },
+                            onPending: function(result) {
+                                alert("Menunggu pembayaran!");
+                                tutupModalMember();
+                            },
+                            onError: function(result) {
+                                alert("Pembayaran gagal!");
+                            },
+                            onClose: function() {
+                                alert('Anda menutup popup tanpa menyelesaikan pembayaran');
+                            }
+                        });
+                    } else {
+                        alert('Gagal membuat pembayaran');
+                    }
+                })
+
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan');
+                })
+                .finally(() => {
+                    tombolBayar.disabled = false;
+                    tombolBayar.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Bayar Sekarang';
+                });
+        }
+
+        // Detail paket function
+        function lihatDetail(slug) {
+            fetch(`/paket/${slug}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Parse the HTML and extract the content we need
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    // Extract title and content
+                    const title = doc.querySelector('h1').textContent;
+                    const content = doc.querySelector('.container').innerHTML;
+
+                    document.getElementById('detailPaketJudul').textContent = title;
+                    document.getElementById('detailPaketContent').innerHTML = content;
+
+                    bukaModalDetailPaket();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Gagal memuat detail paket');
+                });
+        }
+
+        // Booking functions
+        function bukaStep1(id, nama, harga, foto) {
+            if (!isLoggedIn) {
+                bukaModalLogin();
+                return;
+            }
+
+            terpilih.paketId = id;
+            terpilih.paketNama = nama;
+            terpilih.harga = harga;
+            terpilih.fotoPath = foto ? urlStorage + '/' + foto : '';
+            terpilih.mobil = [];
+            terpilih.pointsUsed = 0;
+            terpilih.discount = 0;
+
+            resetPilihanKendaraan();
+
+            const hariIni = new Date();
+            const tahun = hariIni.getFullYear();
+            const bulan = String(hariIni.getMonth() + 1).padStart(2, '0');
+            const hari = String(hariIni.getDate()).padStart(2, '0');
+            const tanggalTerformat = `${tahun}-${bulan}-${hari}`;
+
+            terpilih.tanggal = tanggalTerformat;
+            perbaruiPeringatanWaktuBooking(tanggalTerformat);
+
+            setTimeout(() => {
+                cekKetersediaanKendaraan(tanggalTerformat);
+            }, 100);
+
+            document.getElementById('kontainerPicker').classList.remove('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step2').classList.add('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function tutupPicker() {
+            document.getElementById('kontainerPicker').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function tutupModalKonfirmasi() {
+            document.getElementById('modalKonfirmasi').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            tutupPicker();
+
+            // Refresh halaman untuk update status member jika ada perubahan
+            window.location.reload();
+        }
+
+        // Booking process function
+        function prosesBooking() {
+            if (!isLoggedIn) {
+                bukaModalLogin();
+                return;
+            }
+
+            const tombolKonfirmasi = document.getElementById('tombolKonfirmasiBooking');
+            tombolKonfirmasi.disabled = true;
+            tombolKonfirmasi.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+
+            // Validate form data
+            const formData = new FormData();
+
+            // Add CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                formData.append('_token', csrfToken.getAttribute('content'));
+            } else {
+                // Fallback: get from form
+                const tokenInput = document.querySelector('input[name="_token"]');
+                if (tokenInput) {
+                    formData.append('_token', tokenInput.value);
                 }
             }
 
-            // Inisialisasi Flatpickr dengan bahasa Indonesia
+            // Add basic booking data
+            formData.append('paket_id', terpilih.paketId);
+            formData.append('tanggal', terpilih.tanggal);
+            formData.append('jam_mulai', terpilih.waktu);
+            formData.append('points_used', terpilih.pointsUsed);
+
+            // Add selected cars data
+            terpilih.mobil.forEach((mobil, index) => {
+                formData.append('mobil_ids[]', mobil.id);
+            });
+
+            // Add participant data
+            const participantInputs = document.querySelectorAll('input[name="jumlah_peserta[]"]');
+            participantInputs.forEach(input => {
+                formData.append('jumlah_peserta[]', input.value);
+            });
+
+            // Debug: Log form data
+            console.log('Sending booking data:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+
+            // Submit booking
+            fetch('/booking', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // Jangan tampilkan modal konfirmasi dulu
+                        // Langsung trigger pembayaran jika ada snap token
+                        if (data.snap_token) {
+                            snap.pay(data.snap_token, {
+                                onSuccess: function(result) {
+                                    console.log("Hasil pembayaran:", result);
+
+                                    // Kirim data ke server dulu
+                                    fetch('/booking/payment/success', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector(
+                                                    'meta[name="csrf-token"]').getAttribute(
+                                                    'content')
+                                            },
+                                            body: JSON.stringify(result)
+                                        })
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            console.log(data.message);
+
+                                            // Baru tampilkan modal setelah server berhasil diupdate
+                                            let successMessage =
+                                                "Pembayaran berhasil! E-ticket akan segera dikirim.";
+                                            if (terpilih.pointsUsed > 0) {
+                                                successMessage +=
+                                                    ` Anda menghemat Rp ${terpilih.discount.toLocaleString('id-ID')} dengan ${terpilih.pointsUsed} poin!`;
+                                            }
+                                            document.getElementById('pesanSukses').textContent =
+                                                successMessage;
+                                            document.getElementById('modalKonfirmasi').classList.remove(
+                                                'hidden');
+                                        })
+                                        .catch(error => {
+                                            console.error('Error:', error);
+
+                                            // Tetap tampilkan modal meski ada error server
+                                            document.getElementById('pesanSukses').textContent =
+                                                "Pembayaran berhasil, namun terjadi kesalahan saat memperbarui status. Silakan hubungi customer service.";
+                                            document.getElementById('modalKonfirmasi').classList.remove(
+                                                'hidden');
+                                        });
+                                },
+                                onPending: function(result) {
+                                    // Tampilkan modal untuk pending payment
+                                    document.getElementById('pesanSukses').textContent =
+                                        "Pembayaran sedang diproses. E-ticket akan dikirim setelah pembayaran dikonfirmasi.";
+                                    document.getElementById('modalKonfirmasi').classList.remove('hidden');
+                                },
+                                onError: function(result) {
+                                    alert("Pembayaran gagal! Silakan coba lagi.");
+                                    console.error('Payment error:', result);
+                                },
+                                onClose: function() {
+                                    // User menutup popup pembayaran
+                                    alert(
+                                        'Pembayaran dibatalkan. Booking Anda akan di-hold selama 4 jam. Silakan lakukan pembayaran di kantor kami.'
+                                    );
+
+                                    // Tampilkan modal dengan pesan hold
+                                    document.getElementById('pesanSukses').textContent =
+                                        "Booking berhasil dibuat dan akan di-hold selama 4 jam. Silakan lakukan pembayaran di kantor kami.";
+                                    document.getElementById('modalKonfirmasi').classList.remove('hidden');
+                                }
+                            });
+                        } else {
+                            // Jika tidak ada snap token, tampilkan pesan error
+                            alert('Gagal membuat pembayaran. Silakan coba lagi.');
+                        }
+                    } else {
+                        alert(data.message || 'Terjadi kesalahan saat membuat booking');
+                    }
+                })
+                .catch(error => {
+                    console.error('Booking Error:', error);
+                    if (error.message) {
+                        alert(error.message);
+                    } else if (error.error) {
+                        alert(error.error);
+                    } else {
+                        alert('Terjadi kesalahan saat memproses booking');
+                    }
+                })
+                .finally(() => {
+                    tombolKonfirmasi.disabled = false;
+                    tombolKonfirmasi.innerHTML = 'Konfirmasi & Bayar <i class="fas fa-check ml-2"></i>';
+                });
+        }
+
+        // Initialize flatpickr and other booking functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize flatpickr
             flatpickr("#tglPicker", {
                 inline: true,
                 locale: "id",
@@ -1068,7 +2244,6 @@
                 }
             });
 
-            // Time picker
             flatpickr("#timePicker", {
                 enableTime: true,
                 noCalendar: true,
@@ -1081,183 +2256,7 @@
                 }
             });
 
-            const picker = document.getElementById('kontainerPicker');
-            const step1 = document.getElementById('step1');
-            const step2 = document.getElementById('step2');
-            const modalKonfirmasiMultiple = document.getElementById('modalKonfirmasiMultiple');
-
-            /**
-             * DIPERBAIKI: Fungsi untuk memeriksa ketersediaan kendaraan berdasarkan tanggal
-             * Sekarang API mengembalikan daftar mobil yang TERSEDIA, bukan yang dibooking
-             */
-            function cekKetersediaanKendaraan(tanggal) {
-                resetPilihanKendaraan();
-                indikatorLoadingTanggal.classList.remove('hidden');
-
-                // Cek pembatasan waktu terlebih dahulu
-                if (!apakahBookingDiizinkan(tanggal)) {
-                    indikatorLoadingTanggal.classList.add('hidden');
-                    // Sembunyikan semua kendaraan jika booking tidak diizinkan
-                    perbaruiKetersediaanKendaraan([]);
-                    return;
-                }
-
-                fetch(`${urlApi}?date=${tanggal}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        indikatorLoadingTanggal.classList.add('hidden');
-                        // DIPERBAIKI: Sekarang data berisi ID mobil yang TERSEDIA
-                        perbaruiKetersediaanKendaraan(data || []);
-                    })
-                    .catch(error => {
-                        console.error('Error saat mengecek ketersediaan:', error);
-                        indikatorLoadingTanggal.classList.add('hidden');
-                        gunakanDataStatik();
-                    });
-            }
-
-            // Dapatkan semua ID kendaraan untuk disembunyikan ketika booking tidak diizinkan
-            function dapatkanSemuaIdKendaraan() {
-                const tombolKendaraan = document.querySelectorAll('.tombol-kendaraan');
-                return Array.from(tombolKendaraan).map(btn => parseInt(btn.dataset.id));
-            }
-
-            function gunakanDataStatik() {
-                // Data statis: mobil dengan ID 1 dan 3 yang tersedia
-                const kendaraanTersedia = [1, 3];
-                perbaruiKetersediaanKendaraan(kendaraanTersedia);
-            }
-
-            /**
-             * DIPERBAIKI: Fungsi untuk memperbarui ketersediaan kendaraan
-             * Sekarang hanya menampilkan kendaraan yang tersedia, menyembunyikan yang tidak tersedia
-             */
-            function perbaruiKetersediaanKendaraan(idKendaraanTersedia) {
-                const tombolKendaraan = document.querySelectorAll('.tombol-kendaraan');
-                let adaKendaraanTersedia = false;
-
-                tombolKendaraan.forEach(btn => {
-                    const idKendaraan = parseInt(btn.dataset.id);
-
-                    // DIPERBAIKI: Logika kebalikan - tampilkan jika ID ada dalam daftar tersedia
-                    if (idKendaraanTersedia.includes(idKendaraan)) {
-                        // Kendaraan TERSEDIA
-                        btn.style.display = 'flex';
-                        btn.disabled = false;
-                        adaKendaraanTersedia = true;
-                    } else {
-                        // Kendaraan TIDAK tersedia
-                        btn.style.display = 'none';
-                    }
-                });
-
-                // Tampilkan/sembunyikan pesan tidak ada kendaraan dan daftar kendaraan
-                if (!adaKendaraanTersedia) {
-                    pesanTidakAdaMobil.classList.remove('hidden');
-                    daftarKendaraan.classList.add('hidden');
-                } else {
-                    pesanTidakAdaMobil.classList.add('hidden');
-                    daftarKendaraan.classList.remove('hidden');
-                }
-
-                aktifkanTombolLanjutJikaSiap();
-            }
-
-            // NEW: Reset pilihan mobil
-            function resetPilihanMobil() {
-                terpilih.mobil = [];
-
-                document.querySelectorAll('.tombol-kendaraan').forEach(btn => {
-                    btn.classList.remove('car-selected');
-                    // Hapus counter jika ada
-                    const counter = btn.querySelector('.car-counter');
-                    if (counter) counter.remove();
-                });
-
-                perbaruiCounterMobil();
-                aktifkanTombolLanjutJikaSiap();
-                tombolResetPilihan.classList.add('hidden');
-            }
-
-            // NEW: Reset pilihan kendaraan
-            function resetPilihanKendaraan() {
-                resetPilihanMobil();
-
-                document.querySelectorAll('.tombol-kendaraan').forEach(btn => {
-                    btn.style.display = 'flex';
-                    btn.disabled = false;
-                });
-
-                pesanTidakAdaMobil.classList.add('hidden');
-                daftarKendaraan.classList.remove('hidden');
-                peringatanMultipleBooking.classList.add('hidden');
-                aktifkanTombolLanjutJikaSiap();
-            }
-
-            // NEW: Update counter mobil yang dipilih
-            function perbaruiCounterMobil() {
-                const jumlahMobil = terpilih.mobil.length;
-
-                if (jumlahMobil > 0) {
-                    selectedCarsCount.textContent = jumlahMobil;
-                    selectedCarsCounter.classList.remove('hidden');
-
-                    // Tampilkan peringatan jika lebih dari 1 mobil
-                    if (jumlahMobil > 1) {
-                        peringatanMultipleBooking.classList.remove('hidden');
-                        jumlahMobilDipesan.textContent = jumlahMobil;
-                    } else {
-                        peringatanMultipleBooking.classList.add('hidden');
-                    }
-
-                    tombolResetPilihan.classList.remove('hidden');
-                } else {
-                    selectedCarsCounter.classList.add('hidden');
-                    peringatanMultipleBooking.classList.add('hidden');
-                    tombolResetPilihan.classList.add('hidden');
-                }
-            }
-
-            function aktifkanTombolLanjutJikaSiap() {
-                if (terpilih.tanggal && terpilih.waktu && terpilih.mobil.length > 0) {
-                    tombolLanjutStep.disabled = false;
-                    tombolLanjutStep.classList.remove('opacity-50', 'cursor-not-allowed');
-                } else {
-                    tombolLanjutStep.disabled = true;
-                    tombolLanjutStep.classList.add('opacity-50', 'cursor-not-allowed');
-                }
-            }
-
-            // DIPERBAIKI: Fungsi dengan nama Indonesia
-            window.bukaStep1 = function(id, nama, hr, foto) {
-                terpilih.paketId = id;
-                terpilih.paketNama = nama;
-                terpilih.harga = hr;
-                terpilih.fotoPath = foto ? urlStorage + '/' + foto : '';
-                terpilih.mobil = []; // Reset mobil yang dipilih
-
-                resetPilihanKendaraan();
-
-                const hariIni = new Date();
-                const tahun = hariIni.getFullYear();
-                const bulan = String(hariIni.getMonth() + 1).padStart(2, '0');
-                const hari = String(hariIni.getDate()).padStart(2, '0');
-                const tanggalTerformat = `${tahun}-${bulan}-${hari}`;
-
-                terpilih.tanggal = tanggalTerformat;
-                perbaruiPeringatanWaktuBooking(tanggalTerformat);
-
-                setTimeout(() => {
-                    cekKetersediaanKendaraan(tanggalTerformat);
-                }, 100);
-
-                picker.classList.remove('hidden');
-                step1.classList.remove('hidden');
-                step2.classList.add('hidden');
-                document.body.style.overflow = 'hidden';
-            };
-
-            // NEW: Event listener untuk tombol kendaraan dengan multiple selection
+            // Car selection event listeners
             document.querySelectorAll('.tombol-kendaraan').forEach(btn => {
                 btn.addEventListener('click', () => {
                     if (btn.style.display === 'none') return;
@@ -1266,19 +2265,14 @@
                     const mobilNama = btn.dataset.tipe;
                     const mobilKursi = parseInt(btn.dataset.seats);
 
-                    // Cek apakah mobil sudah dipilih
                     const indexMobil = terpilih.mobil.findIndex(m => m.id === mobilId);
 
                     if (indexMobil >= 0) {
-                        // Hapus mobil dari pilihan
                         terpilih.mobil.splice(indexMobil, 1);
                         btn.classList.remove('car-selected');
-
-                        // Hapus counter jika ada
                         const counter = btn.querySelector('.car-counter');
                         if (counter) counter.remove();
                     } else {
-                        // Tambahkan mobil ke pilihan
                         terpilih.mobil.push({
                             id: mobilId,
                             nama: mobilNama,
@@ -1287,13 +2281,10 @@
 
                         btn.classList.add('car-selected');
 
-                        // Tambahkan counter jika lebih dari 1 mobil
                         if (terpilih.mobil.length > 1) {
-                            // Hapus counter yang mungkin sudah ada
                             const oldCounter = btn.querySelector('.car-counter');
                             if (oldCounter) oldCounter.remove();
 
-                            // Buat counter baru
                             const counter = document.createElement('span');
                             counter.className = 'car-counter';
                             counter.textContent = terpilih.mobil.length;
@@ -1306,296 +2297,329 @@
                 });
             });
 
-            // NEW: Fungsi untuk menampilkan konfirmasi multiple booking
-            window.keStep2 = function() {
-                if (!terpilih.tanggal) return alert('Pilih tanggal dahulu');
-                if (!terpilih.waktu) return alert('Pilih jam mulai dahulu');
-                if (terpilih.mobil.length === 0) return alert('Pilih minimal 1 mobil dahulu');
+            // Initialize pagination and search
+            initializePagination();
+        });
 
-                // Jika lebih dari 1 mobil, tampilkan konfirmasi
-                if (terpilih.mobil.length > 1) {
-                    konfirmasiJumlahMobil.textContent = terpilih.mobil.length;
-                    modalKonfirmasiMultiple.classList.remove('hidden');
-                    return;
+        // Helper functions for booking
+        function apakahBookingDiizinkan(tanggalTerpilih) {
+            const sekarang = new Date();
+            const terpilih = new Date(tanggalTerpilih);
+            const besok = new Date();
+            besok.setDate(besok.getDate() + 1);
+
+            if (terpilih.toDateString() === besok.toDateString()) {
+                const jamSekarang = sekarang.getHours();
+                if (jamSekarang >= 17) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function perbaruiPeringatanWaktuBooking(tanggalTerpilih) {
+            const peringatanWaktuBooking = document.getElementById('peringatanWaktuBooking');
+            if (!apakahBookingDiizinkan(tanggalTerpilih)) {
+                peringatanWaktuBooking.classList.remove('hidden');
+            } else {
+                peringatanWaktuBooking.classList.add('hidden');
+            }
+        }
+
+        function cekKetersediaanKendaraan(tanggal) {
+            resetPilihanKendaraan();
+            const indikatorLoadingTanggal = document.getElementById('indikatorLoadingTanggal');
+            indikatorLoadingTanggal.classList.remove('hidden');
+
+            if (!apakahBookingDiizinkan(tanggal)) {
+                indikatorLoadingTanggal.classList.add('hidden');
+                perbaruiKetersediaanKendaraan([]);
+                return;
+            }
+
+            fetch(`${urlApi}?date=${tanggal}`)
+                .then(response => response.json())
+                .then(data => {
+                    indikatorLoadingTanggal.classList.add('hidden');
+                    perbaruiKetersediaanKendaraan(data || []);
+                })
+                .catch(error => {
+                    console.error('Error saat mengecek ketersediaan:', error);
+                    indikatorLoadingTanggal.classList.add('hidden');
+                    perbaruiKetersediaanKendaraan([1, 3]); // fallback data
+                });
+        }
+
+        function perbaruiKetersediaanKendaraan(idKendaraanTersedia) {
+            const tombolKendaraan = document.querySelectorAll('.tombol-kendaraan');
+            const pesanTidakAdaMobil = document.getElementById('pesanTidakAdaMobil');
+            const daftarKendaraan = document.getElementById('daftarKendaraan');
+            let adaKendaraanTersedia = false;
+
+            tombolKendaraan.forEach(btn => {
+                const idKendaraan = parseInt(btn.dataset.id);
+
+                if (idKendaraanTersedia.includes(idKendaraan)) {
+                    btn.style.display = 'flex';
+                    btn.disabled = false;
+                    adaKendaraanTersedia = true;
+                } else {
+                    btn.style.display = 'none';
+                }
+            });
+
+            if (!adaKendaraanTersedia) {
+                pesanTidakAdaMobil.classList.remove('hidden');
+                daftarKendaraan.classList.add('hidden');
+            } else {
+                pesanTidakAdaMobil.classList.add('hidden');
+                daftarKendaraan.classList.remove('hidden');
+            }
+
+            aktifkanTombolLanjutJikaSiap();
+        }
+
+        function resetPilihanMobil() {
+            terpilih.mobil = [];
+
+            document.querySelectorAll('.tombol-kendaraan').forEach(btn => {
+                btn.classList.remove('car-selected');
+                const counter = btn.querySelector('.car-counter');
+                if (counter) counter.remove();
+            });
+
+            perbaruiCounterMobil();
+            aktifkanTombolLanjutJikaSiap();
+            document.getElementById('tombolResetPilihan').classList.add('hidden');
+        }
+
+        function resetPilihanKendaraan() {
+            resetPilihanMobil();
+
+            document.querySelectorAll('.tombol-kendaraan').forEach(btn => {
+                btn.style.display = 'flex';
+                btn.disabled = false;
+            });
+
+            document.getElementById('pesanTidakAdaMobil').classList.add('hidden');
+            document.getElementById('daftarKendaraan').classList.remove('hidden');
+            document.getElementById('peringatanMultipleBooking').classList.add('hidden');
+            aktifkanTombolLanjutJikaSiap();
+        }
+
+        function perbaruiCounterMobil() {
+            const jumlahMobil = terpilih.mobil.length;
+            const selectedCarsCounter = document.getElementById('selectedCarsCounter');
+            const selectedCarsCount = document.getElementById('selectedCarsCount');
+            const peringatanMultipleBooking = document.getElementById('peringatanMultipleBooking');
+            const jumlahMobilDipesan = document.getElementById('jumlahMobilDipesan');
+            const tombolResetPilihan = document.getElementById('tombolResetPilihan');
+
+            if (jumlahMobil > 0) {
+                selectedCarsCount.textContent = jumlahMobil;
+                selectedCarsCounter.classList.remove('hidden');
+
+                if (jumlahMobil > 1) {
+                    peringatanMultipleBooking.classList.remove('hidden');
+                    jumlahMobilDipesan.textContent = jumlahMobil;
+                } else {
+                    peringatanMultipleBooking.classList.add('hidden');
                 }
 
-                // Jika hanya 1 mobil, langsung ke step 2
-                lanjutkanKeStep2();
-            };
+                tombolResetPilihan.classList.remove('hidden');
+            } else {
+                selectedCarsCounter.classList.add('hidden');
+                peringatanMultipleBooking.classList.add('hidden');
+                tombolResetPilihan.classList.add('hidden');
+            }
+        }
 
-            // NEW: Fungsi untuk membatalkan multiple booking
-            window.batalkanMultipleBooking = function() {
-                modalKonfirmasiMultiple.classList.add('hidden');
-            };
+        function aktifkanTombolLanjutJikaSiap() {
+            const tombolLanjutStep = document.getElementById('tombolLanjutStep');
+            if (terpilih.tanggal && terpilih.waktu && terpilih.mobil.length > 0) {
+                tombolLanjutStep.disabled = false;
+                tombolLanjutStep.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                tombolLanjutStep.disabled = true;
+                tombolLanjutStep.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
 
-            // NEW: Fungsi untuk melanjutkan multiple booking
-            window.lanjutkanMultipleBooking = function() {
-                modalKonfirmasiMultiple.classList.add('hidden');
-                lanjutkanKeStep2();
-            };
+        function keStep2() {
+            if (!terpilih.tanggal) return alert('Pilih tanggal dahulu');
+            if (!terpilih.waktu) return alert('Pilih jam mulai dahulu');
+            if (terpilih.mobil.length === 0) return alert('Pilih minimal 1 mobil dahulu');
 
-            // NEW: Fungsi untuk lanjut ke step 2
-            function lanjutkanKeStep2() {
-                // Isi preview
-                document.getElementById('previewPaket').innerText = terpilih.paketNama;
-                document.getElementById('previewTanggal').innerText = formatTanggalTampilan(terpilih.tanggal);
-                document.getElementById('previewWaktu').innerText = terpilih.waktu;
+            if (terpilih.mobil.length > 1) {
+                document.getElementById('konfirmasiJumlahMobil').textContent = terpilih.mobil.length;
+                document.getElementById('modalKonfirmasiMultiple').classList.remove('hidden');
+                return;
+            }
 
-                // Tampilkan daftar mobil yang dipilih
-                const previewKendaraan = document.getElementById('previewKendaraan');
-                previewKendaraan.innerHTML = '';
+            lanjutkanKeStep2();
+        }
 
-                let totalHarga = 0;
+        function batalkanMultipleBooking() {
+            document.getElementById('modalKonfirmasiMultiple').classList.add('hidden');
+        }
 
-                // Buat hidden inputs untuk mobil yang dipilih
-                const hiddenMobilInputs = document.getElementById('hiddenMobilInputs');
-                hiddenMobilInputs.innerHTML = '';
+        function lanjutkanMultipleBooking() {
+            document.getElementById('modalKonfirmasiMultiple').classList.add('hidden');
+            lanjutkanKeStep2();
+        }
 
-                // Buat container untuk input peserta
-                const participantInputsContainer = document.getElementById('participantInputsContainer');
-                participantInputsContainer.innerHTML = '';
+        function lanjutkanKeStep2() {
+            // Fill preview
+            document.getElementById('previewPaket').innerText = terpilih.paketNama;
+            document.getElementById('previewTanggal').innerText = formatTanggalTampilan(terpilih.tanggal);
+            document.getElementById('previewWaktu').innerText = terpilih.waktu;
 
-                // Isi input tersembunyi dasar
-                document.getElementById('inputPaketId').value = terpilih.paketId;
-                document.getElementById('inputTanggal').value = terpilih.tanggal;
-                document.getElementById('inputWaktu').value = terpilih.waktu;
+            const previewKendaraan = document.getElementById('previewKendaraan');
+            previewKendaraan.innerHTML = '';
 
-                // Loop untuk setiap mobil yang dipilih
-                terpilih.mobil.forEach((mobil, index) => {
-                    // Tambahkan ke preview
-                    const mobilItem = document.createElement('div');
-                    mobilItem.className = 'font-medium text-gray-800 mb-1';
-                    mobilItem.innerHTML =
-                        `${index + 1}. ${mobil.nama} <span class="text-xs text-gray-500">(${mobil.kursi} kursi)</span>`;
-                    previewKendaraan.appendChild(mobilItem);
+            let totalHarga = 0;
 
-                    // Tambahkan hidden input untuk mobil
-                    const mobilIdInput = document.createElement('input');
-                    mobilIdInput.type = 'hidden';
-                    mobilIdInput.name = `mobil_ids[]`;
-                    mobilIdInput.value = mobil.id;
-                    hiddenMobilInputs.appendChild(mobilIdInput);
+            const hiddenMobilInputs = document.getElementById('hiddenMobilInputs');
+            hiddenMobilInputs.innerHTML = '';
 
-                    // Buat input jumlah peserta untuk setiap mobil
-                    const participantCard = document.createElement('div');
-                    participantCard.className =
-                        'bg-white p-4 sm:p-5 rounded-xl shadow-lg space-y-3 sm:space-y-4';
-                    participantCard.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <h5 class="text-base sm:text-lg font-semibold text-gray-700">
-                                Mobil ${index + 1}: ${mobil.nama}
-                            </h5>
-                            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                Maks: ${mobil.kursi} kursi
-                            </span>
+            const participantInputsContainer = document.getElementById('participantInputsContainer');
+            participantInputsContainer.innerHTML = '';
+
+            document.getElementById('inputPaketId').value = terpilih.paketId;
+            document.getElementById('inputTanggal').value = terpilih.tanggal;
+            document.getElementById('inputWaktu').value = terpilih.waktu;
+
+            terpilih.mobil.forEach((mobil, index) => {
+                const mobilItem = document.createElement('div');
+                mobilItem.className = 'font-medium text-gray-800 mb-1';
+                mobilItem.innerHTML =
+                    `${index + 1}. ${mobil.nama} <span class="text-xs text-gray-500">(${mobil.kursi} kursi)</span>`;
+                previewKendaraan.appendChild(mobilItem);
+
+                const mobilIdInput = document.createElement('input');
+                mobilIdInput.type = 'hidden';
+                mobilIdInput.name = `mobil_ids[]`;
+                mobilIdInput.value = mobil.id;
+                hiddenMobilInputs.appendChild(mobilIdInput);
+
+                const participantCard = document.createElement('div');
+                participantCard.className = 'bg-white p-4 sm:p-5 rounded-xl shadow-lg space-y-3 sm:space-y-4';
+                participantCard.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h5 class="text-base sm:text-lg font-semibold text-gray-700">
+                            Mobil ${index + 1}: ${mobil.nama}
+                        </h5>
+                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            Maks: ${mobil.kursi} kursi
+                        </span>
+                    </div>
+                    <label class="block">
+                        <span class="text-gray-600 font-medium text-sm sm:text-base">Jumlah Peserta</span>
+                        <div class="relative">
+                            <input
+                                type="text"
+                                name="jumlah_peserta[]"
+                                inputmode="numeric"
+                                pattern="\\d*"
+                                oninput="validasiJumlahPeserta(this, ${mobil.kursi}, ${index})"
+                                required
+                                class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
+                                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
+                                placeholder="Masukkan jumlah peserta"
+                            />
                         </div>
-                        <label class="block">
-                            <span class="text-gray-600 font-medium text-sm sm:text-base">Jumlah Peserta</span>
-                            <div class="relative">
-                                <input
-                                    type="text"
-                                    name="jumlah_peserta[]"
-                                    value="1"
-                                    inputmode="numeric"
-                                    pattern="\\d*"
-                                    oninput="validasiJumlahPeserta(this, ${mobil.kursi}, ${index})"
-                                    required
-                                    class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
-                                    focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
-                                    placeholder="Masukkan jumlah peserta"
-                                />
-                            </div>
-                            <div class="hidden error-message" id="errorPeserta-${index}">
-                                Jumlah peserta tidak boleh melebihi kapasitas mobil
-                            </div>
-                        </label>
-                    `;
-                    participantInputsContainer.appendChild(participantCard);
+                        <div class="hidden error-message" id="errorPeserta-${index}">
+                            Jumlah peserta tidak boleh melebihi kapasitas mobil
+                        </div>
+                    </label>
+                `;
+                participantInputsContainer.appendChild(participantCard);
 
-                    // Tambahkan harga untuk setiap mobil (asumsi 1 peserta per mobil untuk awal)
-                    totalHarga += terpilih.harga;
-                });
-
-                // Update total harga
-                document.getElementById('previewHarga').innerText =
-                    new Intl.NumberFormat('id-ID', {
-                        style: 'currency',
-                        currency: 'IDR',
-                        minimumFractionDigits: 0
-                    }).format(totalHarga);
-
-                // Tampilkan foto
-                const fotoEl = document.getElementById('previewFoto');
-                fotoEl.src = terpilih.fotoPath || '/placeholder.svg';
-                document.getElementById('wrapperPreviewFoto').classList.remove('hidden');
-
-                // Update pesan sukses untuk multiple booking
-                const pesanSukses = document.getElementById('pesanSukses');
-                if (terpilih.mobil.length > 1) {
-                    pesanSukses.textContent =
-                        `${terpilih.mobil.length} e-ticket akan didapatkan setelah melakukan pembayaran, segera melakukan pembayaran di kantor kami, sementara booking Anda akan kami hold selama 4 jam.`;
-                } else {
-                    pesanSukses.textContent =
-                        `E-ticket akan didapatkan setelah melakukan pembayaran, segera melakukan pembayaran di kantor kami, sementara booking Anda akan kami hold selama 4 jam.`;
-                }
-
-                if (window.innerWidth < 768) {
-                    window.scrollTo(0, 0);
-                }
-
-                step1.classList.add('hidden');
-                step2.classList.remove('hidden');
-            }
-
-            // DIPERBAIKI: Validasi jumlah peserta dengan nama Indonesia
-            window.validasiJumlahPeserta = function(input, maksKursi, index) {
-                // Hapus karakter non-numerik
-                input.value = input.value.replace(/\D/g, '');
-
-                const jumlah = parseInt(input.value) || 0;
-                const divError = document.getElementById(`errorPeserta-${index}`);
-
-                if (jumlah > maksKursi) {
-                    input.classList.add('input-error');
-                    divError.classList.remove('hidden');
-                    divError.textContent =
-                        `Jumlah peserta tidak boleh melebihi ${maksKursi} orang (kapasitas mobil)`;
-
-                    // Nonaktifkan tombol submit
-                    document.getElementById('tombolKonfirmasiBooking').disabled = true;
-                    document.getElementById('tombolKonfirmasiBooking').classList.add('opacity-50',
-                        'cursor-not-allowed');
-                } else {
-                    input.classList.remove('input-error');
-                    divError.classList.add('hidden');
-
-                    // Cek semua input peserta
-                    const semuaValid = Array.from(document.querySelectorAll('input[name="jumlah_peserta[]"]'))
-                        .every(inp => !inp.classList.contains('input-error'));
-
-                    if (semuaValid) {
-                        // Aktifkan tombol submit
-                        document.getElementById('tombolKonfirmasiBooking').disabled = false;
-                        document.getElementById('tombolKonfirmasiBooking').classList.remove('opacity-50',
-                            'cursor-not-allowed');
-                    }
-                }
-            };
-
-            function formatTanggalTampilan(strTanggal) {
-                if (!strTanggal) return '';
-
-                const bagian = strTanggal.split('-');
-                if (bagian.length !== 3) return strTanggal;
-
-                return `${bagian[2]}-${bagian[1]}-${bagian[0]}`;
-            }
-
-            window.kembaliKeStep1 = function() {
-                step2.classList.add('hidden');
-                step1.classList.remove('hidden');
-
-                if (window.innerWidth < 768) {
-                    window.scrollTo(0, 0);
-                }
-            };
-
-            window.tutupPicker = function() {
-                picker.classList.add('hidden');
-                document.body.style.overflow = 'auto';
-            };
-
-            // Tampilkan modal konfirmasi setelah booking berhasil
-            window.tampilkanModalKonfirmasi = function() {
-                // Validasi semua input peserta
-                const inputPeserta = document.querySelectorAll('input[name="jumlah_peserta[]"]');
-                let valid = true;
-
-                inputPeserta.forEach((input, index) => {
-                    const jumlah = parseInt(input.value) || 0;
-                    const maksKursi = terpilih.mobil[index].kursi;
-
-                    if (jumlah > maksKursi) {
-                        valid = false;
-                        input.classList.add('input-error');
-                        document.getElementById(`errorPeserta-${index}`).classList.remove('hidden');
-                    }
-                });
-
-                if (!valid) {
-                    return;
-                }
-
-                document.getElementById('modalKonfirmasi').classList.remove('hidden');
-                document.body.style.overflow = 'hidden';
-            };
-
-            // Tutup modal konfirmasi
-            window.tutupModalKonfirmasi = function() {
-                document.getElementById('modalKonfirmasi').classList.add('hidden');
-                document.body.style.overflow = 'auto';
-
-                // Tutup juga picker booking
-                tutupPicker();
-
-                // Reset form
-                resetFormBooking();
-            };
-
-            // Reset form booking
-            function resetFormBooking() {
-                // Reset state terpilih
-                terpilih.paketId = null;
-                terpilih.paketNama = '';
-                terpilih.harga = 0;
-                terpilih.tanggal = '';
-                terpilih.waktu = '';
-                terpilih.fotoPath = '';
-                terpilih.mobil = [];
-
-                // Reset input form
-                document.querySelector('form').reset();
-
-                // Reset pilihan kendaraan
-                resetPilihanKendaraan();
-            }
-
-            // Konfirmasi dan submit form
-            window.konfirmasiDanSubmit = function() {
-                // Submit form
-                document.querySelector('form').submit();
-            };
-
-            document.querySelector('form').addEventListener('submit', function(e) {
-                // Biarkan form submit normal tanpa validasi tambahan
-                // karena validasi sudah dilakukan di konfirmasiDanSubmit()
+                totalHarga += terpilih.harga;
             });
 
-            // Handle resize untuk kalender responsif
-            window.addEventListener('resize', () => {
-                if (document.querySelector('.flatpickr-calendar')) {
-                    const tanggalSekarang = flatpickr("#tglPicker").selectedDates[0];
-                    flatpickr("#tglPicker").destroy();
+            // Update price display
+            updateTotalPrice();
 
-                    flatpickr("#tglPicker", {
-                        inline: true,
-                        locale: "id",
-                        dateFormat: "Y-m-d",
-                        minDate: "today",
-                        defaultDate: tanggalSekarang,
-                        static: true,
-                        onChange: (dates, str) => {
-                            terpilih.tanggal = str;
-                            perbaruiPeringatanWaktuBooking(str);
-                            cekKetersediaanKendaraan(str);
-                        }
-                    });
+            const fotoEl = document.getElementById('previewFoto');
+            fotoEl.src = terpilih.fotoPath || '/placeholder.svg';
+            document.getElementById('wrapperPreviewFoto').classList.remove('hidden');
+
+            const pesanSukses = document.getElementById('pesanSukses');
+            if (terpilih.mobil.length > 1) {
+                pesanSukses.textContent =
+                    `${terpilih.mobil.length} e-ticket akan didapatkan setelah melakukan pembayaran, segera melakukan pembayaran di kantor kami, sementara booking Anda akan kami hold selama 4 jam.`;
+            } else {
+                pesanSukses.textContent =
+                    `E-ticket akan didapatkan setelah melakukan pembayaran, segera melakukan pembayaran di kantor kami, sementara booking Anda akan kami hold selama 4 jam.`;
+            }
+
+            if (window.innerWidth < 768) {
+                window.scrollTo(0, 0);
+            }
+
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+        }
+
+        function validasiJumlahPeserta(input, maksKursi, index) {
+            // Remove non-numeric characters
+            input.value = input.value.replace(/\D/g, '');
+
+            const jumlah = parseInt(input.value) || 1;
+            const divError = document.getElementById(`errorPeserta-${index}`);
+            const tombolKonfirmasiBooking = document.getElementById('tombolKonfirmasiBooking');
+
+            if (jumlah > maksKursi) {
+                input.classList.add('input-error');
+                divError.classList.remove('hidden');
+                divError.textContent = `Jumlah peserta tidak boleh melebihi ${maksKursi} orang (kapasitas mobil)`;
+
+                tombolKonfirmasiBooking.disabled = true;
+                tombolKonfirmasiBooking.classList.add('opacity-50', 'cursor-not-allowed');
+            } else if (jumlah < 1) {
+                input.classList.add('input-error');
+                divError.classList.remove('hidden');
+                divError.textContent = 'Jumlah peserta minimal 1 orang';
+
+                tombolKonfirmasiBooking.disabled = true;
+                tombolKonfirmasiBooking.classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                input.classList.remove('input-error');
+                divError.classList.add('hidden');
+
+                // Check if all inputs are valid
+                const semuaValid = Array.from(document.querySelectorAll('input[name="jumlah_peserta[]"]'))
+                    .every(inp => !inp.classList.contains('input-error') && parseInt(inp.value) >= 1);
+
+                if (semuaValid) {
+                    tombolKonfirmasiBooking.disabled = false;
+                    tombolKonfirmasiBooking.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
+            }
+        }
 
-                perbaruiTampilanPaginasi();
-            });
+        function formatTanggalTampilan(strTanggal) {
+            if (!strTanggal) return '';
 
-            // Fungsi pagination dan pencarian (tidak berubah)
+            const bagian = strTanggal.split('-');
+            if (bagian.length !== 3) return strTanggal;
+
+            return `${bagian[2]}-${bagian[1]}-${bagian[0]}`;
+        }
+
+        function kembaliKeStep1() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+
+            if (window.innerWidth < 768) {
+                window.scrollTo(0, 0);
+            }
+        }
+
+        // Pagination and search functionality
+        function initializePagination() {
             const paketPerHalaman = 6;
             const kontainerPaket = document.getElementById('packageContainer');
             const kontainerPaginasi = document.getElementById('pagination');
@@ -1784,35 +2808,13 @@
                 inputPencarian.focus();
             });
 
-            let touchStartY = 0;
-            document.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-            }, {
-                passive: true
-            });
-
-            document.addEventListener('touchmove', (e) => {
-                const touchY = e.touches[0].clientY;
-                const scrollTop = window.scrollY;
-
-                if (scrollTop <= 0 && touchY - touchStartY > 50) {
-                    kontainerPaket.classList.add('pull-refresh');
-                    setTimeout(() => {
-                        kontainerPaket.classList.remove('pull-refresh');
-                        if (inputPencarian.value.trim() !== '') {
-                            inputPencarian.value = '';
-                            filterPaket('');
-                        }
-                    }, 1000);
-                }
-            }, {
-                passive: true
-            });
-
-            // Inisialisasi tampilan paket
+            // Initialize
             renderPaket();
             perbaruiTampilanPaginasi();
-        });
+
+            // Handle resize
+            window.addEventListener('resize', perbaruiTampilanPaginasi);
+        }
     </script>
 </body>
 

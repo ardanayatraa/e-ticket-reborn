@@ -118,7 +118,7 @@
 
         <fieldset>
             <legend>Include</legend>
-            @php $include = $transaksi->includeModel; @endphp
+            @php $include = $transaksi->paketWisata->include; @endphp
             <div class="checkbox-group">
                 <label>Bensin: {{ $include?->bensin ? '✓' : '✗' }}</label>
                 <label>Parkir: {{ $include?->parkir ? '✓' : '✗' }}</label>

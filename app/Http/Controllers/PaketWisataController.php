@@ -1,20 +1,23 @@
 <?php
-// app/Http/Controllers/PaketWisataController.php
 
 namespace App\Http\Controllers;
 
 use App\Models\Ketersediaan;
 use App\Models\Mobil;
 use App\Models\PaketWisata;
+use App\Models\IncludeModel;
+use App\Models\Exclude;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class PaketWisataController extends Controller
 {
     public function index()
     {
-        $pakets = PaketWisata::all();
+        $pakets = PaketWisata::with(['include', 'exclude'])->get();
         return view('paket-wisata.index', compact('pakets'));
     }
 
@@ -29,31 +32,112 @@ class PaketWisataController extends Controller
             'judul'  => 'required|string|max:255',
             'tempat' => 'required|string',
             'deskripsi' => 'required|string',
-            'durasi' => 'required|integer',
-            'harga'  => 'required|numeric',
-            'foto'   => 'nullable|image|max:2048', // max 2MB
+            'durasi' => 'required|integer|min:1',
+            'max_duration' => 'required|integer|min:1|max:9',
+            'harga'  => 'required|numeric|min:0',
+            'foto'   => 'nullable|image|max:2048',
+            'gallery.*' => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('foto')) {
-            // simpan di storage/app/public/paket-wisata
-            $data['foto'] = $request->file('foto')
-                                 ->store('paket-wisata', 'public');
+        DB::beginTransaction();
+
+        try {
+            // Generate slug
+            $data['slug'] = Str::slug($data['judul']);
+
+            // Handle foto upload
+            if ($request->hasFile('foto')) {
+                $data['foto'] = $request->file('foto')->store('paket-wisata', 'public');
+            }
+
+            // Handle gallery upload
+            if ($request->hasFile('gallery')) {
+                $galleryPaths = [];
+                foreach ($request->file('gallery') as $file) {
+                    $galleryPaths[] = $file->store('paket-wisata/gallery', 'public');
+                }
+                $data['gallery'] = $galleryPaths;
+            }
+
+            // Create paket wisata
+            $paketWisata = PaketWisata::create($data);
+
+            // Handle include/exclude
+            $includeFields = ['bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk'];
+
+            $includeData = [
+                'paketwisata_id' => $paketWisata->paketwisata_id,
+                'status_ketersediaan' => 1
+            ];
+
+            $excludeData = [
+                'paketwisata_id' => $paketWisata->paketwisata_id,
+                'status_ketersediaan' => 1
+            ];
+
+            // Process include/exclude based on checkbox selections
+            foreach ($includeFields as $field) {
+                if ($request->has("include.$field") && $request->input("include.$field") == '1') {
+                    $includeData[$field] = 1;
+                    $excludeData[$field] = 0;
+                } else {
+                    $includeData[$field] = 0;
+                    $excludeData[$field] = 1;
+                }
+            }
+
+            // Create include and exclude records
+            IncludeModel::create($includeData);
+            Exclude::create($excludeData);
+
+            DB::commit();
+
+            return redirect()
+                ->route('paket-wisata.index')
+                ->with('success', 'Paket wisata berhasil dibuat.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            // Clean up uploaded files if error
+            if (isset($data['foto']) && Storage::disk('public')->exists($data['foto'])) {
+                Storage::disk('public')->delete($data['foto']);
+            }
+
+            if (isset($data['gallery'])) {
+                foreach ($data['gallery'] as $image) {
+                    if (Storage::disk('public')->exists($image)) {
+                        Storage::disk('public')->delete($image);
+                    }
+                }
+            }
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
-
-        PaketWisata::create($data);
-
-        return redirect()
-            ->route('paket-wisata.index')
-            ->with('success', 'Paket wisata created.');
     }
 
-    public function show(PaketWisata $paketwisata)
+    public function show($slug)
     {
-        return view('paket-wisata.show', compact('paketwisata'));
+        $paket = PaketWisata::where('slug', $slug)
+            ->with(['include', 'exclude'])
+            ->firstOrFail();
+        $mobil = Mobil::all();
+
+        // Jika request AJAX, return view detail saja
+        if (request()->ajax()) {
+            return view('paket-wisata.detail-content', compact('paket', 'mobil'));
+        }
+
+        // Jika bukan AJAX, return halaman detail lengkap
+        return view('paket-wisata.detail', compact('paket', 'mobil'));
     }
 
     public function edit(PaketWisata $paketwisata)
     {
+        $paketwisata->load(['include', 'exclude']);
         return view('paket-wisata.edit', compact('paketwisata'));
     }
 
@@ -63,48 +147,147 @@ class PaketWisataController extends Controller
             'judul'  => 'required|string|max:255',
             'tempat' => 'required|string',
             'deskripsi' => 'required|string',
-            'durasi' => 'required|integer',
-            'harga'  => 'required|numeric',
+            'durasi' => 'required|integer|min:1',
+            'max_duration' => 'required|integer|min:1|max:9',
+            'harga'  => 'required|numeric|min:0',
             'foto'   => 'nullable|image|max:2048',
+            'gallery.*' => 'nullable|image|max:2048',
         ]);
 
-        if ($request->hasFile('foto')) {
-            // hapus file lama jika ada
-            if ($paketwisata->foto) {
-                Storage::disk('public')->delete($paketwisata->foto);
+        DB::beginTransaction();
+
+        try {
+            // Update slug jika judul berubah
+            if ($paketwisata->judul !== $data['judul']) {
+                $data['slug'] = Str::slug($data['judul']);
             }
-            // simpan yang baru
-            $data['foto'] = $request->file('foto')
-                                 ->store('paket-wisata', 'public');
+
+            // Handle foto upload
+            if ($request->hasFile('foto')) {
+                if ($paketwisata->foto) {
+                    Storage::disk('public')->delete($paketwisata->foto);
+                }
+                $data['foto'] = $request->file('foto')->store('paket-wisata', 'public');
+            }
+
+            // Handle gallery update
+            if ($request->hasFile('gallery')) {
+                // Hapus gallery lama
+                if ($paketwisata->gallery) {
+                    foreach ($paketwisata->gallery as $oldImage) {
+                        Storage::disk('public')->delete($oldImage);
+                    }
+                }
+
+                $galleryPaths = [];
+                foreach ($request->file('gallery') as $file) {
+                    $galleryPaths[] = $file->store('paket-wisata/gallery', 'public');
+                }
+                $data['gallery'] = $galleryPaths;
+            }
+
+            // Update paket wisata
+            $paketwisata->update($data);
+
+            // Update include/exclude
+            $includeFields = ['bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk'];
+
+            $includeData = [];
+            $excludeData = [];
+
+            foreach ($includeFields as $field) {
+                if ($request->has("include.$field") && $request->input("include.$field") == '1') {
+                    $includeData[$field] = 1;
+                    $excludeData[$field] = 0;
+                } else {
+                    $includeData[$field] = 0;
+                    $excludeData[$field] = 1;
+                }
+            }
+
+            // Update or create include
+            if ($paketwisata->include) {
+                $paketwisata->include->update($includeData);
+            } else {
+                $includeData['paketwisata_id'] = $paketwisata->paketwisata_id;
+                $includeData['status_ketersediaan'] = 1;
+                IncludeModel::create($includeData);
+            }
+
+            // Update or create exclude
+            if ($paketwisata->exclude) {
+                $paketwisata->exclude->update($excludeData);
+            } else {
+                $excludeData['paketwisata_id'] = $paketwisata->paketwisata_id;
+                $excludeData['status_ketersediaan'] = 1;
+                Exclude::create($excludeData);
+            }
+
+            DB::commit();
+
+            return redirect()
+                ->route('paket-wisata.index')
+                ->with('success', 'Paket wisata berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
         }
-
-        $paketwisata->update($data);
-
-        return redirect()
-            ->route('paket-wisata.index')
-            ->with('success', 'Paket wisata updated.');
     }
 
     public function destroy(PaketWisata $paketwisata)
     {
-        // hapus file foto jika ada
-        if ($paketwisata->foto) {
-            Storage::disk('public')->delete($paketwisata->foto);
+        DB::beginTransaction();
+
+        try {
+            // Delete include and exclude first (karena ada foreign key)
+            if ($paketwisata->include) {
+                $paketwisata->include->delete();
+            }
+
+            if ($paketwisata->exclude) {
+                $paketwisata->exclude->delete();
+            }
+
+            // Delete files
+            if ($paketwisata->foto) {
+                Storage::disk('public')->delete($paketwisata->foto);
+            }
+
+            if ($paketwisata->gallery) {
+                foreach ($paketwisata->gallery as $image) {
+                    Storage::disk('public')->delete($image);
+                }
+            }
+
+            // Delete paket wisata
+            $paketwisata->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('paket-wisata.index')
+                ->with('success', 'Paket wisata berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+
+            return redirect()
+                ->back()
+                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
         }
-
-        $paketwisata->delete();
-
-        return redirect()
-            ->route('paket-wisata.index')
-            ->with('success', 'Paket wisata deleted.');
     }
 
     public function list()
     {
-        $paket = PaketWisata::orderBy('created_at', 'desc')
-                            ->get();
-
-        $mobil= Mobil::all();
+        $paket = PaketWisata::with(['include', 'exclude'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $mobil = Mobil::all();
         return view('paket-wisata.landing-page', compact('paket', 'mobil'));
     }
 
@@ -117,48 +300,42 @@ class PaketWisataController extends Controller
         // Cek pembatasan waktu booking untuk besok
         $tomorrow = Carbon::tomorrow();
         if ($requestDate->isSameDay($tomorrow) && $currentTime->hour >= 17) {
-            // Jika booking untuk besok dan sudah lewat jam 17:00, tidak ada mobil yang tersedia
             return response()->json([]);
         }
 
-        // 1. Mobil taken via ketersediaan (langsung)
+        // Logic ketersediaan mobil (sama seperti sebelumnya)
         $takenFromKetersediaan = \App\Models\Ketersediaan::whereDate('tanggal_keberangkatan', $date)
             ->pluck('mobil_id')
             ->toArray();
 
-        // 2. Mobil taken via transaksi yang sudah terkonfirmasi (paid/confirmed)
         $takenFromTransaksiConfirmed = \App\Models\Transaksi::whereHas('pemesanan', function ($q) use ($date) {
                 $q->whereDate('tanggal_keberangkatan', $date);
             })
-            ->whereIn('transaksi_status', ['paid', 'confirmed']) // Hanya yang sudah terkonfirmasi
+            ->whereIn('transaksi_status', ['paid', 'confirmed'])
             ->with('pemesanan')
             ->get()
             ->pluck('pemesanan.mobil_id')
             ->toArray();
 
-        // 3. Mobil yang sedang di-hold (pending dalam 4 jam terakhir)
         $fourHoursAgo = Carbon::now()->subHours(4);
         $takenFromHold = \App\Models\Transaksi::whereHas('pemesanan', function ($q) use ($date) {
                 $q->whereDate('tanggal_keberangkatan', $date);
             })
-            ->where('transaksi_status', 'pending') // Status pending (hold)
-            ->where('created_at', '>=', $fourHoursAgo) // Dibuat dalam 4 jam terakhir
+            ->where('transaksi_status', 'pending')
+            ->where('created_at', '>=', $fourHoursAgo)
             ->with('pemesanan')
             ->get()
             ->pluck('pemesanan.mobil_id')
             ->toArray();
 
-        // 4. Gabungkan semua mobil yang tidak tersedia
         $takenMobilIds = array_unique(array_merge(
             $takenFromKetersediaan,
             $takenFromTransaksiConfirmed,
             $takenFromHold
         ));
 
-        // 5. Ambil mobil yang available (tidak ada di taken)
         $available = \App\Models\Mobil::whereNotIn('mobil_id', $takenMobilIds)->get();
 
-        // Return hanya ID mobil yang tersedia
         return response()->json($available->pluck('mobil_id'));
     }
 }

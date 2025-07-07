@@ -7,11 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exclude extends Model
 {
-    protected $primaryKey = 'exclude_id';
-    protected $fillable = ['pemesanan_id', 'bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk', 'status_ketersediaan'];
+    use HasFactory;
 
-    public function pemesanan()
+    protected $table = 'excludes';
+    protected $primaryKey = 'exclude_id';
+    protected $fillable = [
+        'paketwisata_id',
+        'bensin',
+        'parkir',
+        'sopir',
+        'makan_siang',
+        'makan_malam',
+        'tiket_masuk',
+        'status_ketersediaan'
+    ];
+
+    public function paketWisata()
     {
-        return $this->belongsTo(Pemesanan::class, 'pemesanan_id', 'pemesanan_id');
+        return $this->belongsTo(PaketWisata::class, 'paketwisata_id', 'paketwisata_id');
     }
 }

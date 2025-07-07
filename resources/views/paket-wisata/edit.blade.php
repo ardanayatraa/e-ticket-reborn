@@ -4,7 +4,7 @@
         <div class="mx-auto sm:px-6 lg:px-8 w-full">
             {{-- Header --}}
             <div class="mb-4">
-                <h2 class="text-lg font-semibold border-b-2 border-green-300 py-4 pl-6 text-green-800">
+                <h2 class="text-lg font-semibold bg-white border-b-2 border-green-300 py-4 pl-6 text-green-800">
                     Edit Paket Wisata: {{ $paketwisata->judul }}
                 </h2>
             </div>
@@ -18,7 +18,7 @@
 
                     {{-- Validation Errors --}}
                     @if ($errors->any())
-                        <div class="p-4 bg-green-50 border border-green-200 rounded-lg text-green-800">
+                        <div class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
                             <ul class="list-disc list-inside text-sm">
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -27,104 +27,234 @@
                         </div>
                     @endif
 
-                    {{-- Fields --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {{-- Judul --}}
-                        <div>
-                            <label for="judul" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Judul<span class="text-red-500">*</span>
-                            </label>
-                            <input id="judul" name="judul" type="text"
-                                value="{{ old('judul', $paketwisata->judul) }}" required
-                                placeholder="Masukkan judul paket"
-                                class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-                                          focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
+                    {{-- Basic Information Section --}}
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
+                            Informasi Dasar
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Judul --}}
+                            <div>
+                                <label for="judul" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Judul<span class="text-red-500">*</span>
+                                </label>
+                                <input id="judul" name="judul" type="text"
+                                    value="{{ old('judul', $paketwisata->judul) }}" required
+                                    placeholder="Masukkan judul paket"
+                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
+                                           focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
+                            </div>
+
+                            {{-- Tempat --}}
+                            <div>
+                                <label for="tempat" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Tempat<span class="text-red-500">*</span>
+                                </label>
+                                <input id="tempat" name="tempat" type="text"
+                                    value="{{ old('tempat', $paketwisata->tempat) }}" required
+                                    placeholder="Masukkan lokasi wisata"
+                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
+                                           focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
+                            </div>
+
+                            {{-- Durasi --}}
+                            <div>
+                                <label for="durasi" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Durasi (hari)<span class="text-red-500">*</span>
+                                </label>
+                                <input id="durasi" name="durasi" type="number"
+                                    value="{{ old('durasi', $paketwisata->durasi) }}" required min="1"
+                                    placeholder="Contoh: 3"
+                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
+                                           focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
+                            </div>
+
+                            {{-- Max Duration --}}
+                            <div>
+                                <label for="max_duration"
+                                    class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Durasi Maksimal (jam)<span class="text-red-500">*</span>
+                                </label>
+                                <input id="max_duration" name="max_duration" type="number"
+                                    value="{{ old('max_duration', $paketwisata->max_duration) }}" required
+                                    min="1" max="9" placeholder="Maksimal 9 jam"
+                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
+                                           focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
+                            </div>
+
+                            {{-- Harga --}}
+                            <div class="md:col-span-2">
+                                <label for="harga" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Harga (Rp)<span class="text-red-500">*</span>
+                                </label>
+                                <input id="harga" name="harga" type="number"
+                                    value="{{ old('harga', $paketwisata->harga) }}" required step="0.01"
+                                    placeholder="Masukkan harga paket"
+                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
+                                           focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            <div class="md:col-span-2">
+                                <label for="deskripsi" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Deskripsi<span class="text-red-500">*</span>
+                                </label>
+                                <textarea id="deskripsi" name="deskripsi" rows="4" required placeholder="Masukkan deskripsi paket"
+                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">{{ old('deskripsi', $paketwisata->deskripsi) }}</textarea>
+                            </div>
                         </div>
+                    </div>
 
-                        {{-- Deskripsi --}}
-                        <div>
-                            <label for="deskripsi" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Deskripsi<span class="text-red-500">*</span>
-                            </label>
-                            <textarea id="deskripsi" name="deskripsi" rows="4" required placeholder="Masukkan deskripsi paket"
-                                class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-               focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">{{ old('deskripsi', $paketwisata->deskripsi) }}</textarea>
-                        </div>
+                    {{-- Include Section --}}
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
+                            Fasilitas yang Termasuk
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Centang fasilitas yang termasuk dalam paket. Yang tidak dicentang akan otomatis masuk ke
+                            kategori tidak termasuk.
+                        </p>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {{-- Include Fields --}}
+                            @php
+                                $includeFields = [
+                                    'bensin' => ['label' => 'Bensin', 'icon' => '⛽'],
+                                    'parkir' => ['label' => 'Parkir', 'icon' => '🅿️'],
+                                    'sopir' => ['label' => 'Sopir', 'icon' => '👨‍✈️'],
+                                    'makan_siang' => ['label' => 'Makan Siang', 'icon' => '🍽️'],
+                                    'makan_malam' => ['label' => 'Makan Malam', 'icon' => '🍽️'],
+                                    'tiket_masuk' => ['label' => 'Tiket Masuk', 'icon' => '🎫'],
+                                ];
+                            @endphp
 
-                        {{-- Tempat --}}
-                        <div>
-                            <label for="tempat" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Tempat<span class="text-red-500">*</span>
-                            </label>
-                            <input id="tempat" name="tempat" type="text"
-                                value="{{ old('tempat', $paketwisata->tempat) }}" required
-                                placeholder="Masukkan lokasi wisata"
-                                class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-                                          focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
-                        </div>
+                            @foreach ($includeFields as $field => $data)
+                                <div class="relative">
+                                    <label for="include_{{ $field }}"
+                                        class="flex items-center p-4 border-2 rounded-lg cursor-pointer transition-all
+                                               hover:border-gray-400 dark:hover:border-gray-600
+                                               border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800
+                                               has-[:checked]:border-green-500 has-[:checked]:bg-green-50 dark:has-[:checked]:bg-green-900/20">
 
-                        {{-- Durasi --}}
-                        <div>
-                            <label for="durasi" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Durasi (hari)<span class="text-red-500">*</span>
-                            </label>
-                            <input id="durasi" name="durasi" type="number" min="1"
-                                value="{{ old('durasi', $paketwisata->durasi) }}" required placeholder="Contoh: 3"
-                                class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-                                          focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
-                        </div>
+                                        <input type="checkbox" id="include_{{ $field }}"
+                                            name="include[{{ $field }}]" value="1"
+                                            @if (old("include.$field", $paketwisata->include->$field ?? 0)) checked @endif
+                                            class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 mr-3">
 
-                        {{-- Harga --}}
-                        <div>
-                            <label for="harga" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Harga (Rp)<span class="text-red-500">*</span>
-                            </label>
-                            <input id="harga" name="harga" type="number" step="0.01"
-                                value="{{ old('harga', $paketwisata->harga) }}" required
-                                placeholder="Masukkan harga paket"
-                                class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-                                          focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
-                        </div>
-
-                        {{-- Foto --}}
-                        <div class="md:col-span-2">
-                            <label for="foto" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Foto Paket (opsional)
-                            </label>
-                            <input id="foto" name="foto" type="file" accept="image/*"
-                                class="block w-full text-gray-700 dark:text-gray-200" />
-                            @error('foto')
-                                <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                            @enderror
-
-                            {{-- Existing preview --}}
-                            @if ($paketwisata->foto)
-                                <div class="mt-4">
-                                    <p class="text-sm text-gray-600 mb-1">Foto saat ini:</p>
-                                    <img src="{{ asset('storage/' . $paketwisata->foto) }}"
-                                        class="w-40 h-40 object-cover rounded-lg border" alt="Foto paket saat ini">
+                                        <span class="text-2xl mr-3">{{ $data['icon'] }}</span>
+                                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            {{ $data['label'] }}
+                                        </span>
+                                    </label>
                                 </div>
-                            @endif
+                            @endforeach
+                        </div>
+                    </div>
 
-                            {{-- New preview --}}
-                            <div class="mt-4">
-                                <p id="preview-label" class="text-sm text-gray-600 mb-1 hidden">Preview baru:</p>
+                    {{-- Media Section --}}
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b pb-2">
+                            Media
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Foto Utama --}}
+                            <div>
+                                <label for="foto" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Foto Utama
+                                </label>
+
+                                {{-- Current Photo --}}
+                                @if ($paketwisata->foto)
+                                    <div class="mb-4">
+                                        <p class="text-sm text-gray-600 mb-2">Foto saat ini:</p>
+                                        <img src="{{ asset('storage/' . $paketwisata->foto) }}" alt="Current Photo"
+                                            class="w-full h-48 object-cover rounded-lg border">
+                                    </div>
+                                @endif
+
+                                <div
+                                    class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
+                                            fill="none" viewBox="0 0 48 48">
+                                            <path
+                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600">
+                                            <label for="foto"
+                                                class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                                <span>Upload foto baru</span>
+                                                <input id="foto" name="foto" type="file" accept="image/*"
+                                                    class="sr-only">
+                                            </label>
+                                            <p class="pl-1">atau drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">PNG, JPG, GIF up to 2MB</p>
+                                    </div>
+                                </div>
                                 <img id="preview" src="#" alt="Preview Foto Paket"
-                                    class="w-40 h-40 object-cover rounded-lg border hidden" />
+                                    class="mt-4 w-full h-48 object-cover rounded-lg hidden border" />
+                            </div>
+
+                            {{-- Gallery --}}
+                            <div>
+                                <label for="gallery" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Gallery Foto (Multiple)
+                                </label>
+
+                                {{-- Current Gallery --}}
+                                @if ($paketwisata->gallery && count($paketwisata->gallery) > 0)
+                                    <div class="mb-4">
+                                        <p class="text-sm text-gray-600 mb-2">Gallery saat ini:</p>
+                                        <div class="grid grid-cols-3 gap-2">
+                                            @foreach ($paketwisata->gallery as $image)
+                                                <img src="{{ asset('storage/' . $image) }}" alt="Gallery Image"
+                                                    class="w-full h-24 object-cover rounded-lg border">
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <div
+                                    class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
+                                            fill="none" viewBox="0 0 48 48">
+                                            <path
+                                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600">
+                                            <label for="gallery"
+                                                class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-green-500">
+                                                <span>Upload gallery baru</span>
+                                                <input id="gallery" name="gallery[]" type="file"
+                                                    accept="image/*" multiple class="sr-only">
+                                            </label>
+                                            <p class="pl-1">atau drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-gray-500">Multiple files allowed</p>
+                                        <p class="text-xs text-yellow-600">Gallery lama akan terhapus jika upload yang
+                                            baru</p>
+                                    </div>
+                                </div>
+                                <div id="gallery-preview" class="mt-4 grid grid-cols-3 gap-2"></div>
                             </div>
                         </div>
                     </div>
 
                     {{-- Buttons --}}
-                    <div class="flex justify-end gap-4">
+                    <div class="flex justify-end gap-4 pt-6 border-t">
                         <a href="{{ route('paket-wisata.index') }}"
                             class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition">
                             Batal
                         </a>
                         <button type="submit"
                             class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition shadow">
-                            Update
+                            Update Paket Wisata
                         </button>
                     </div>
                 </form>
@@ -132,19 +262,50 @@
         </div>
     </div>
 
-    {{-- Preview script --}}
+    {{-- Preview scripts --}}
     <script>
-        const fileInput = document.getElementById('foto');
-        const previewImg = document.getElementById('preview');
-        const previewLabel = document.getElementById('preview-label');
-
-        fileInput.addEventListener('change', function() {
+        // Preview foto utama
+        document.getElementById('foto').addEventListener('change', function(e) {
             const file = this.files[0];
             if (!file) return;
 
-            previewImg.src = URL.createObjectURL(file);
-            previewImg.classList.remove('hidden');
-            previewLabel.classList.remove('hidden');
+            const preview = document.getElementById('preview');
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+        });
+
+        // Preview gallery
+        document.getElementById('gallery').addEventListener('change', function(e) {
+            const files = this.files;
+            const previewContainer = document.getElementById('gallery-preview');
+            previewContainer.innerHTML = '';
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-24 object-cover rounded-lg border">
+                        <button type="button" onclick="this.parentElement.remove()"
+                            class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600">
+                            ×
+                        </button>
+                    `;
+                    previewContainer.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Validate max_duration (now in hours, not related to durasi in days)
+        document.getElementById('max_duration').addEventListener('change', function() {
+            const maxDuration = parseInt(this.value);
+
+            if (maxDuration < 1 || maxDuration > 9) {
+                this.value = Math.max(1, Math.min(9, maxDuration));
+                alert('Durasi maksimal harus antara 1-9 jam!');
+            }
         });
     </script>
 </x-app-layout>

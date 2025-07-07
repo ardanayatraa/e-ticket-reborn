@@ -45,7 +45,7 @@ class TransaksiController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'paketwisata_id'   => 'required|exists:paketwisatas,paketwisata_id',
+            'paketwisata_id'   => 'required|exists:paket_wisatas,paketwisata_id',
             'pemesan_id'       => 'required|exists:pelanggans,pelanggan_id',
             'pemesanan_id'     => 'required|exists:pemesanans,pemesanan_id',
             'jenis_transaksi'  => 'required|string|max:255',
@@ -128,115 +128,132 @@ class TransaksiController extends Controller
         abort(501, 'Metode ticket() belum diimplementasikan.');
     }
 
-
     public function confirmPayment(Request $request, Transaksi $transaksi)
-{
-    // 1. Ambil data dari request
-    $jenisPembayaran   = $request->input('jenis_pembayaran');
-    $deposit           = (float) $request->input('deposit', 0);
-    $additionalCharge  = (float) $request->input('additional_charge', 0);
-    $payToProvider     = (float) $request->input('pay_to_provider', 0);
-    $include           = $request->input('include', []); // array include
-    $note              = $request->input('note'); // ambil note
+    {
+        // 1. Ambil data dari request
+        $jenisPembayaran   = $request->input('jenis_pembayaran');
+        $deposit           = (float) $request->input('deposit', 0);
+        $additionalCharge  = (float) $request->input('additional_charge', 0);
+        $payToProvider     = (float) $request->input('pay_to_provider', 0);
+        $include           = $request->input('include', []); // array include
+        $note              = $request->input('note'); // ambil note
 
-    // 2. Hitung ulang total_transaksi dan owe_to_me
-    $hargaPaket     = optional($transaksi->paketWisata)->harga ?? 0;
-    $newTotal       = $hargaPaket + $additionalCharge;
-    $oweToMe        = max($newTotal - $deposit, 0);
+        // 2. Hitung ulang total_transaksi dan owe_to_me
+        $hargaPaket     = optional($transaksi->paketWisata)->harga ?? 0;
+        $newTotal       = $hargaPaket + $additionalCharge;
+        $oweToMe        = max($newTotal - $deposit, 0);
 
-    // 3. Update kolom transaksi, termasuk total_transaksi, additional_charge, dan note
-    $transaksi->update([
-        'jenis_transaksi'   => $jenisPembayaran,
-        'deposit'           => $deposit,
-        'additional_charge' => $additionalCharge,
-        'total_transaksi'   => $newTotal,      // perbarui total_transaksi
-        'pay_to_provider'   => $payToProvider,
-        'owe_to_me'         => $oweToMe,
-        'transaksi_status'  => 'paid',
-        'note'              => $note,          // update note
-    ]);
+        // 3. Update kolom transaksi, termasuk include_data untuk menyimpan pilihan include
+        $transaksi->update([
+            'jenis_transaksi'   => $jenisPembayaran,
+            'deposit'           => $deposit,
+            'additional_charge' => $additionalCharge,
+            'total_transaksi'   => $newTotal,
+            'pay_to_provider'   => $payToProvider,
+            'owe_to_me'         => $oweToMe,
+            'transaksi_status'  => 'paid',
+            'note'              => $note,
+            'include_data'      => json_encode($include), // Simpan pilihan include sebagai JSON
+        ]);
 
-    // 4. Daftar field include/exclude
-    $fieldList = ['bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk'];
+        // 4. Daftar field include/exclude
+        $fieldList = ['bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk'];
 
-    // 5. Simpan tabel include
-    IncludeModel::create(
-        array_merge(
+        // 5. Update atau buat data include untuk paket wisata ini
+        $paketWisataId = $transaksi->paketwisata_id;
+
+        // Cek apakah sudah ada data include untuk paket wisata ini
+        $existingInclude = IncludeModel::where('paketwisata_id', $paketWisataId)->first();
+
+        $includeData = array_merge(
             [
-                'pemesanan_id'        => $transaksi->pemesanan_id,
+                'paketwisata_id'      => $paketWisataId,
                 'status_ketersediaan' => true,
             ],
             collect($fieldList)
                 ->mapWithKeys(fn($f) => [$f => !empty($include[$f])])
                 ->toArray()
-        )
-    );
+        );
 
-    // 6. Simpan tabel exclude
-    Exclude::create(
-        array_merge(
+        if ($existingInclude) {
+            $existingInclude->update($includeData);
+        } else {
+            IncludeModel::create($includeData);
+        }
+
+        // 6. Update atau buat data exclude untuk paket wisata ini
+        $existingExclude = Exclude::where('paketwisata_id', $paketWisataId)->first();
+
+        $excludeData = array_merge(
             [
-                'pemesanan_id'        => $transaksi->pemesanan_id,
+                'paketwisata_id'      => $paketWisataId,
                 'status_ketersediaan' => true,
             ],
             collect($fieldList)
                 ->mapWithKeys(fn($f) => [$f => empty($include[$f])])
                 ->toArray()
-        )
-    );
+        );
 
-    // 7. (Optional) Kirim tiket
-    SendTicketJob::dispatch($transaksi);
+        if ($existingExclude) {
+            $existingExclude->update($excludeData);
+        } else {
+            Exclude::create($excludeData);
+        }
 
-    // 8. Redirect dengan pesan sukses
-    return redirect()
-        ->route('transaksi.index')
-        ->with('success', 'Pembayaran berhasil dikonfirmasi.');
-}
+        // 7. ADD POINTS FOR MEMBER
+        $pelanggan = $transaksi->pelanggan;
+        if ($pelanggan && $pelanggan->is_member) {
+            $pointsAdded = $pelanggan->addPoints($deposit);
 
+            if ($pointsAdded > 0) {
+                session()->flash('points_added', "Selamat! Anda mendapat {$pointsAdded} poin dari transaksi ini.");
+            }
+        }
 
+        // 8. (Optional) Kirim tiket
+        SendTicketJob::dispatch($transaksi);
 
-     /**
+        // 9. Redirect dengan pesan sukses
+        return redirect()
+            ->route('transaksi.index')
+            ->with('success', 'Transaksi berhasil diupdate.');
+    }
+
+    /**
      * Tampilkan halaman laporan transaksi.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\View\View
      */
-     // method laporan yang sudah ada...
-     public function laporan(Request $request)
-     {
-         $transaksi = Transaksi::
-                              orderBy('created_at', 'desc')
-                                ->get();
+    public function laporan(Request $request)
+    {
+        $transaksi = Transaksi::orderBy('created_at', 'desc')->get();
+        return view('transaksi.laporan', compact('transaksi'));
+    }
 
-         return view('transaksi.laporan', compact('transaksi'));
-     }
+    /**
+     * Download data transaksi sebagai file Excel.
+     */
+    public function export()
+    {
+        return Excel::download(new TransaksiExport, 'laporan_transaksi_'.date('Ymd_His').'.xlsx');
+    }
 
-     /**
-      * Download data transaksi sebagai file Excel.
-      */
-     public function export()
-     {
-         return Excel::download(new TransaksiExport, 'laporan_transaksi_'.date('Ymd_His').'.xlsx');
-     }
+    public function dashboard()
+    {
+        $now = Carbon::now();
 
-     public function dashboard()
-     {
-         $now = Carbon::now();
+        $paidThisMonth = \App\Models\Transaksi::where('transaksi_status', 'paid')
+            ->whereMonth('created_at', $now->month)
+            ->whereYear('created_at', $now->year);
 
-         $paidThisMonth = \App\Models\Transaksi::where('transaksi_status', 'paid')
-             ->whereMonth('created_at', $now->month)
-             ->whereYear('created_at', $now->year);
-
-         return view('dashboard', [
-             'totalTransaksi' => $paidThisMonth->count(),
-             'totalOmzet'     => $paidThisMonth->sum('deposit') - $paidThisMonth->sum('pay_to_provider') +  $paidThisMonth->sum('owe_to_me'),
-             'totalPelanggan' => \App\Models\Pelanggan::count(),
-             'totalPaket'     => \App\Models\PaketWisata::count(),
-             'totalMobil'     => \App\Models\Mobil::count(),
-             'totalPemesanan' => \App\Models\Pemesanan::count(),
-         ]);
-     }
-
-
+        return view('dashboard', [
+            'totalTransaksi' => $paidThisMonth->count(),
+            'totalOmzet'     => $paidThisMonth->sum('deposit') - $paidThisMonth->sum('pay_to_provider') +  $paidThisMonth->sum('owe_to_me'),
+            'totalPelanggan' => \App\Models\Pelanggan::count(),
+            'totalPaket'     => \App\Models\PaketWisata::count(),
+            'totalMobil'     => \App\Models\Mobil::count(),
+            'totalPemesanan' => \App\Models\Pemesanan::count(),
+        ]);
+    }
 }

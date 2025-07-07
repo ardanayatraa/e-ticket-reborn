@@ -28,6 +28,7 @@ class Transaksi extends Model
         'note',
         'total_transaksi',
         'transaksi_status',
+        'order_id'
     ];
 
     /**

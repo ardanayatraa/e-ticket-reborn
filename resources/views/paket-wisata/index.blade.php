@@ -10,7 +10,6 @@
                             + Tambah Wisata
                         </a>
                     </div>
-
                     <div class="overflow-x-auto">
                         @livewire('table.paket-wisata-table')
                     </div>

@@ -7,13 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class IncludeModel extends Model
 {
+    use HasFactory;
 
     protected $table = 'includes';
     protected $primaryKey = 'include_id';
-    protected $fillable = ['pemesanan_id', 'bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk', 'status_ketersediaan'];
+    protected $fillable = [
+        'paketwisata_id',
+        'bensin',
+        'parkir',
+        'sopir',
+        'makan_siang',
+        'makan_malam',
+        'tiket_masuk',
+        'status_ketersediaan'
+    ];
 
-    public function pemesanan()
+    public function paketWisata()
     {
-        return $this->belongsTo(Pemesanan::class, 'pemesanan_id', 'pemesanan_id');
+        return $this->belongsTo(PaketWisata::class, 'paketwisata_id', 'paketwisata_id');
     }
 }

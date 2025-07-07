@@ -264,7 +264,7 @@
         <fieldset>
             <legend>Include</legend>
             <div class="checkbox-grid">
-                @php $include = $transaksi->includeModel; @endphp
+                @php $include = $transaksi->paketWisata->include; @endphp
                 <label>
                     <input type="checkbox" {{ $include?->bensin ? 'checked' : '' }}>
                     Bensin

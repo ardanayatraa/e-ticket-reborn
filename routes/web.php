@@ -12,19 +12,22 @@ use App\Http\Controllers\ExcludeController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\DetailTransaksiController;
 use App\Http\Controllers\MobilController;
-use App\Models\PaketWisata;
+use App\Http\Controllers\Auth\PelangganAuthController;
+use App\Http\Controllers\MemberController;
+use App\Http\Controllers\BookingController;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
+// Public Routes (No Auth Required)
+Route::get('/', [PaketWisataController::class, 'list'])->name('paket-wisata.landing');
+Route::get('/paket/{slug}', [PaketWisataController::class, 'show'])->name('paket-wisata.detail');
+Route::get('/check-availability', [PaketWisataController::class, 'check'])->name('check-availability');
+
+// Admin Routes (Protected)
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
@@ -33,31 +36,66 @@ Route::middleware([
     Route::get('/dashboard', [TransaksiController::class, 'dashboard'])
         ->name('dashboard');
 
-        Route::resource('admin',         AdminController::class);
-        Route::resource('paket-wisata', PaketWisataController::class)
-        ->parameters(['paket-wisata' => 'paketwisata']);
-        Route::resource('pelanggan',     PelangganController::class);
-        Route::resource('sopir',         SopirController::class);
-        Route::resource('mobil',         MobilController::class);
-        Route::resource('pemesanan',      PemesananController::class)->only(['index','show','edit','update','destroy']);
-        Route::resource('ketersediaan',  KetersediaanController::class);
-        Route::resource('include', IncludeModelController::class)->except(['show']);
-        Route::resource('exclude',       ExcludeController::class)->except(['show']);
-        Route::resource('transaksi',      TransaksiController::class)->except('edit');
-        Route::put('transaksi/{transaksi}/confirm', [TransaksiController::class, 'confirmPayment'])
-        ->name('transaksi.confirm');
-        Route::get('/laporan', [TransaksiController::class, 'laporan'])
-        ->name('laporan');
+    Route::resource('admin', AdminController::class);
 
+    // Paket Wisata Routes - exclude 'show' since it's public
+    Route::resource('paket-wisata', PaketWisataController::class)
+        ->except(['show'])
+        ->parameters(['paket-wisata' => 'paketwisata']);
+
+    Route::resource('pelanggan', PelangganController::class);
+    Route::resource('sopir', SopirController::class);
+    Route::resource('mobil', MobilController::class);
+    Route::resource('pemesanan', PemesananController::class)->only(['index','show','edit','update','destroy']);
+    Route::resource('ketersediaan', KetersediaanController::class);
+    Route::resource('include', IncludeModelController::class)->except(['show']);
+    Route::resource('exclude', ExcludeController::class)->except(['show']);
+    Route::resource('transaksi', TransaksiController::class)->except('edit');
+    Route::put('transaksi/{transaksi}/confirm', [TransaksiController::class, 'confirmPayment'])
+        ->name('transaksi.confirm');
+    Route::get('/laporan', [TransaksiController::class, 'laporan'])
+        ->name('laporan');
 });
 
+// Pelanggan Authentication Routes
+Route::prefix('pelanggan')->group(function () {
+    Route::get('/login', [PelangganAuthController::class, 'showLoginForm'])->name('pelanggan.login');
+    Route::post('/login', [PelangganAuthController::class, 'login']);
+    Route::get('/register', [PelangganAuthController::class, 'showRegisterForm'])->name('pelanggan.register');
+    Route::post('/register', [PelangganAuthController::class, 'register']);
+    Route::post('/logout', [PelangganAuthController::class, 'logout'])->name('pelanggan.logout');
+});
 
-Route::get('/', [PaketWisataController::class, 'list'])->name('paket-wisata.landing');
-Route::get('/paket', [PaketWisataController::class, 'paket'])->name('paket-wisata.paket');
-Route::get('/paket/{paketwisata}', [PaketWisataController::class, 'show'])->name('paket-wisata.show');
-Route::get('/booking/create', [PemesananController::class, 'create'])->name('booking.create');
-Route::post('/booking', [PemesananController::class, 'store'])->name('pemesanan.store');
-Route::get('/check-availability', [PaketWisataController::class, 'check'])
-     ->name('check-availability');
-    Route::get('/transaksi/{transaksi}/ticket', [TransaksiController::class, 'ticket'])
-         ->name('transaksi.ticket');
+// Profile routes (Protected - Pelanggan only)
+Route::middleware('auth:pelanggan')->group(function () {
+    Route::post('/pelanggan/profile/update', [PelangganController::class, 'updateProfile'])
+        ->name('pelanggan.profile.update');
+    Route::post('/pelanggan/redeem-points', [PelangganController::class, 'redeemPoints'])
+        ->name('pelanggan.redeem.points');
+});
+
+// Member Routes (Protected - Pelanggan only)
+Route::middleware('auth:pelanggan')->prefix('member')->group(function () {
+    Route::get('/', [MemberController::class, 'index'])->name('member.index');
+    Route::get('/upgrade', [MemberController::class, 'upgrade'])->name('member.upgrade');
+    Route::post('/payment/success', [MemberController::class, 'manualSuccess']);
+    Route::get('/payment/{orderId}', [MemberController::class, 'payment'])->name('member.payment');
+});
+
+// Booking Routes (Protected - Pelanggan only)
+Route::middleware('auth:pelanggan')->group(function () {
+    Route::get('/booking/create', [PemesananController::class, 'create'])->name('booking.create');
+    Route::post('/booking', [PemesananController::class, 'store'])->name('booking.store');
+    Route::get('/booking/payment/{transaksi}', [BookingController::class, 'payment'])->name('booking.payment');
+    Route::post('/booking/payment/success', [BookingController::class, 'paymentSuccess'])->name('booking.payment.success');
+    Route::get('/download-eticket/{transaksi}', [App\Http\Controllers\PemesananController::class, 'download'])
+    ->name('download.eticket');
+});
+
+// Midtrans Callback Routes (Public - no auth required)
+Route::post('/midtrans/callback/member', [MemberController::class, 'callback'])->name('midtrans.callback.member');
+Route::post('/midtrans/callback/booking', [BookingController::class, 'callback'])->name('midtrans.callback.booking');
+
+// Ticket Route
+Route::get('/transaksi/{transaksi}/ticket', [TransaksiController::class, 'ticket'])
+    ->name('transaksi.ticket');
