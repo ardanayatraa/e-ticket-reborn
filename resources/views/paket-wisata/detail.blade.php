@@ -179,42 +179,6 @@
                 <a href="/" class="text-gray-700 hover:text-teal-600 transition font-medium">Beranda</a>
                 <a href="/#paket" class="text-gray-700 hover:text-teal-600 transition font-medium">Paket Wisata</a>
                 <a href="/#tentang" class="text-gray-700 hover:text-teal-600 transition font-medium">Tentang Kami</a>
-
-                @auth('pelanggan')
-                    <!-- Member Status & Points -->
-                    <div class="flex items-center space-x-3">
-                        @if (Auth::guard('pelanggan')->user()->is_member)
-                            <div class="badge">
-                                <i class="fas fa-crown mr-1"></i>MEMBER
-                            </div>
-                            <div
-                                class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full text-sm font-bold">
-                                <i class="fas fa-star mr-1"></i>{{ Auth::guard('pelanggan')->user()->points }} Poin
-                            </div>
-                        @endif
-
-                        <div class="relative" x-data="{ open: false }">
-                            <button @click="open = !open"
-                                class="flex items-center text-gray-700 hover:text-teal-600 transition font-medium">
-                                <i class="fas fa-user-circle mr-2"></i>
-                                {{ Auth::guard('pelanggan')->user()->nama_pemesan }}
-                                <i class="fas fa-chevron-down ml-1"></i>
-                            </button>
-                            <div x-show="open" @click.away="open = false"
-                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-20">
-                                <form method="POST" action="{{ route('pelanggan.logout') }}" class="block">
-                                    @csrf
-                                    <button type="submit"
-                                        class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
-                                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <a href="/" class="text-gray-700 hover:text-teal-600 transition font-medium">Login</a>
-                @endauth
             </div>
 
             <!-- Mobile Toggle -->
@@ -236,18 +200,7 @@
                 class="block py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">Tentang
                 Kami</a>
 
-            @auth('pelanggan')
-                <form method="POST" action="{{ route('pelanggan.logout') }}" class="block">
-                    @csrf
-                    <button type="submit"
-                        class="block w-full text-left py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </button>
-                </form>
-            @else
-                <a href="/"
-                    class="block py-4 px-4 text-gray-700 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition">Login</a>
-            @endauth
+
         </div>
     </nav>
 
