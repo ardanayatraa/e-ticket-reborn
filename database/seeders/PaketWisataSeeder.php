@@ -15,6 +15,7 @@ class PaketWisataSeeder extends Seeder
         $pakets = [
             [
                 'judul'      => 'Ubud surrounding',
+                'slug'       => 'ubud-surrounding',
                 'tempat'     => 'Elephant cave temple, Tegalalang rice terrace, Tirta empul temple, Gunung kawi temple, Tegenungan waterfall.',
                 'durasi'     => 1,
                 'harga'      => 700000,
@@ -25,6 +26,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Bedugul & waterfall',
+                'slug'       => 'bedugul-waterfall',
                 'tempat'     => 'Banyumala waterfall, Handara gate, Ulundanu bratan temple, Jatiluwih rice terrace.',
                 'durasi'     => 1,
                 'harga'      => 900000,
@@ -35,6 +37,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Bedugul & Tanah Lot sunset',
+                'slug'       => 'bedugul-tanah-lot-sunset',
                 'tempat'     => 'Ulundanu bratan temple, Jatiluwih rice terrace, Tanah lot temple.',
                 'durasi'     => 1,
                 'harga'      => 900000,
@@ -45,6 +48,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Uluwatu tour',
+                'slug'       => 'uluwatu-tour',
                 'tempat'     => 'Garuda Wisnu Kencana statue, Padang-padang beach, Uluwatu temple.',
                 'durasi'     => 1,
                 'harga'      => 900000,
@@ -55,6 +59,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Lempuyang tour',
+                'slug'       => 'lempuyang-tour',
                 'tempat'     => 'Lempuyang temple, Tirta Gangga water palace, Taman Ujung water palace.',
                 'durasi'     => 1,
                 'harga'      => 950000,
@@ -65,6 +70,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Besakih & waterfall tour',
+                'slug'       => 'besakih-waterfall-tour',
                 'tempat'     => 'Tukad Cepung waterfall, Kehen temple, Penglipuran village, Besakih temple.',
                 'durasi'     => 1,
                 'harga'      => 900000,
@@ -75,6 +81,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Kintamani view tour',
+                'slug'       => 'kintamani-view-tour',
                 'tempat'     => 'Gunung kawi temple, Tirta empul temple, Tegalalang rice terrace, Kintamani view.',
                 'durasi'     => 1,
                 'harga'      => 800000,
@@ -85,6 +92,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Art tour',
+                'slug'       => 'art-tour',
                 'tempat'     => 'Mas village (wood carving), Celuk village (silver making), Sukawati art market.',
                 'durasi'     => 1,
                 'harga'      => 700000,
@@ -95,6 +103,7 @@ class PaketWisataSeeder extends Seeder
             ],
             [
                 'judul'      => 'Spiritual tour',
+                'slug'       => 'spiritual-tour',
                 'tempat'     => 'Beji Griya waterfall (purification ritual), Jatiluwih rice terrace, Tanah lot temple.',
                 'durasi'     => 1,
                 'harga'      => 850000,
