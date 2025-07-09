@@ -135,153 +135,162 @@ class PaketWisataController extends Controller
         return view('paket-wisata.detail', compact('paket', 'mobil'));
     }
 
-    public function edit(PaketWisata $paketwisata)
-    {
-        $paketwisata->load(['include', 'exclude']);
-        return view('paket-wisata.edit', compact('paketwisata'));
-    }
+    // PERBAIKAN: Hapus dd(1) dan gunakan parameter yang konsisten
+    public function edit($id)
+{
+    $paketwisata = PaketWisata::findOrFail($id);
+    $paketwisata->load(['include', 'exclude']);
+    
+    return view('paket-wisata.edit', ['paketwisata' => $paketwisata]);
+}
 
-    public function update(Request $request, PaketWisata $paketwisata)
-    {
-        $data = $request->validate([
-            'judul'  => 'required|string|max:255',
-            'tempat' => 'required|string',
-            'deskripsi' => 'required|string',
-            'durasi' => 'required|integer|min:1',
-            'max_duration' => 'required|integer|min:1|max:9',
-            'harga'  => 'required|numeric|min:0',
-            'foto'   => 'nullable|image|max:2048',
-            'gallery.*' => 'nullable|image|max:2048',
-        ]);
+    // PERBAIKAN: Gunakan parameter yang konsisten
+    public function update(Request $request, $id)
+{
+    
+    $paketwisata = PaketWisata::where('slug',$id)->first();
+    
+    $data = $request->validate([
+        'judul'  => 'required|string|max:255',
+        'tempat' => 'required|string',
+        'deskripsi' => 'required|string',
+        'durasi' => 'required|integer|min:1',
+        'max_duration' => 'required|integer|min:1|max:9',
+        'harga'  => 'required|numeric|min:0',
+        'foto'   => 'nullable|image|max:2048',
+        'gallery.*' => 'nullable|image|max:2048',
+    ]);
 
-        DB::beginTransaction();
+    DB::beginTransaction();
 
-        try {
-            // Update slug jika judul berubah
-            if ($paketwisata->judul !== $data['judul']) {
-                $data['slug'] = Str::slug($data['judul']);
-            }
-
-            // Handle foto upload
-            if ($request->hasFile('foto')) {
-                if ($paketwisata->foto) {
-                    Storage::disk('public')->delete($paketwisata->foto);
-                }
-                $data['foto'] = $request->file('foto')->store('paket-wisata', 'public');
-            }
-
-            // Handle gallery update
-            if ($request->hasFile('gallery')) {
-                // Hapus gallery lama
-                if ($paketwisata->gallery) {
-                    foreach ($paketwisata->gallery as $oldImage) {
-                        Storage::disk('public')->delete($oldImage);
-                    }
-                }
-
-                $galleryPaths = [];
-                foreach ($request->file('gallery') as $file) {
-                    $galleryPaths[] = $file->store('paket-wisata/gallery', 'public');
-                }
-                $data['gallery'] = $galleryPaths;
-            }
-
-            // Update paket wisata
-            $paketwisata->update($data);
-
-            // Update include/exclude
-            $includeFields = ['bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk'];
-
-            $includeData = [];
-            $excludeData = [];
-
-            foreach ($includeFields as $field) {
-                if ($request->has("include.$field") && $request->input("include.$field") == '1') {
-                    $includeData[$field] = 1;
-                    $excludeData[$field] = 0;
-                } else {
-                    $includeData[$field] = 0;
-                    $excludeData[$field] = 1;
-                }
-            }
-
-            // Update or create include
-            if ($paketwisata->include) {
-                $paketwisata->include->update($includeData);
-            } else {
-                $includeData['paketwisata_id'] = $paketwisata->paketwisata_id;
-                $includeData['status_ketersediaan'] = 1;
-                IncludeModel::create($includeData);
-            }
-
-            // Update or create exclude
-            if ($paketwisata->exclude) {
-                $paketwisata->exclude->update($excludeData);
-            } else {
-                $excludeData['paketwisata_id'] = $paketwisata->paketwisata_id;
-                $excludeData['status_ketersediaan'] = 1;
-                Exclude::create($excludeData);
-            }
-
-            DB::commit();
-
-            return redirect()
-                ->route('paket-wisata.index')
-                ->with('success', 'Paket wisata berhasil diperbarui.');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return redirect()
-                ->back()
-                ->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
+    try {
+        // Update slug jika judul berubah
+        if ($paketwisata->judul !== $data['judul']) {
+            $data['slug'] = Str::slug($data['judul']);
         }
-    }
 
-    public function destroy(PaketWisata $paketwisata)
-    {
-        DB::beginTransaction();
-
-        try {
-            // Delete include and exclude first (karena ada foreign key)
-            if ($paketwisata->include) {
-                $paketwisata->include->delete();
-            }
-
-            if ($paketwisata->exclude) {
-                $paketwisata->exclude->delete();
-            }
-
-            // Delete files
+        // Handle foto upload
+        if ($request->hasFile('foto')) {
             if ($paketwisata->foto) {
                 Storage::disk('public')->delete($paketwisata->foto);
             }
+            $data['foto'] = $request->file('foto')->store('paket-wisata', 'public');
+        }
 
+        // Handle gallery update
+        if ($request->hasFile('gallery')) {
+            // Hapus gallery lama
             if ($paketwisata->gallery) {
-                foreach ($paketwisata->gallery as $image) {
-                    Storage::disk('public')->delete($image);
+                foreach ($paketwisata->gallery as $oldImage) {
+                    Storage::disk('public')->delete($oldImage);
                 }
             }
 
-            // Delete paket wisata
-            $paketwisata->delete();
-
-            DB::commit();
-
-            return redirect()
-                ->route('paket-wisata.index')
-                ->with('success', 'Paket wisata berhasil dihapus.');
-
-        } catch (\Exception $e) {
-            DB::rollback();
-
-            return redirect()
-                ->back()
-                ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
+            $galleryPaths = [];
+            foreach ($request->file('gallery') as $file) {
+                $galleryPaths[] = $file->store('paket-wisata/gallery', 'public');
+            }
+            $data['gallery'] = $galleryPaths;
         }
-    }
 
+        // Update paket wisata
+        $paketwisata->update($data);
+
+        // Update include/exclude logic...
+        $includeFields = ['bensin', 'parkir', 'sopir', 'makan_siang', 'makan_malam', 'tiket_masuk'];
+
+        $includeData = [];
+        $excludeData = [];
+
+        foreach ($includeFields as $field) {
+            if ($request->has("include.$field") && $request->input("include.$field") == '1') {
+                $includeData[$field] = 1;
+                $excludeData[$field] = 0;
+            } else {
+                $includeData[$field] = 0;
+                $excludeData[$field] = 1;
+            }
+        }
+
+        // Update or create include
+        if ($paketwisata->include) {
+            $paketwisata->include->update($includeData);
+        } else {
+            $includeData['paketwisata_id'] = $paketwisata->paketwisata_id;
+            $includeData['status_ketersediaan'] = 1;
+            IncludeModel::create($includeData);
+        }
+
+        // Update or create exclude
+        if ($paketwisata->exclude) {
+            $paketwisata->exclude->update($excludeData);
+        } else {
+            $excludeData['paketwisata_id'] = $paketwisata->paketwisata_id;
+            $excludeData['status_ketersediaan'] = 1;
+            Exclude::create($excludeData);
+        }
+
+        DB::commit();
+
+        return redirect()
+            ->route('paket-wisata.index')
+            ->with('success', 'Paket wisata berhasil diperbarui.');
+
+    } catch (\Exception $e) {
+        DB::rollback();
+
+        return redirect()
+            ->back()
+            ->withInput()
+            ->with('error', 'Terjadi kesalahan saat memperbarui data: ' . $e->getMessage());
+    }
+}
+
+    // PERBAIKAN: Gunakan parameter yang konsisten
+    public function destroy($id)
+{
+    $paketwisata = PaketWisata::findOrFail($id);
+    
+    DB::beginTransaction();
+
+    try {
+        // Delete include and exclude first
+        if ($paketwisata->include) {
+            $paketwisata->include->delete();
+        }
+
+        if ($paketwisata->exclude) {
+            $paketwisata->exclude->delete();
+        }
+
+        // Delete files
+        if ($paketwisata->foto) {
+            Storage::disk('public')->delete($paketwisata->foto);
+        }
+
+        if ($paketwisata->gallery) {
+            foreach ($paketwisata->gallery as $image) {
+                Storage::disk('public')->delete($image);
+            }
+        }
+
+        // Delete paket wisata
+        $paketwisata->delete();
+
+        DB::commit();
+
+        return redirect()
+            ->route('paket-wisata.index')
+            ->with('success', 'Paket wisata berhasil dihapus.');
+
+    } catch (\Exception $e) {
+        DB::rollback();
+
+        return redirect()
+            ->back()
+            ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
+    }
+}
     public function list()
     {
         $paket = PaketWisata::with(['include', 'exclude'])

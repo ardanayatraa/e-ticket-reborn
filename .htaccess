@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+    # Aktifkan modul rewrite
+    RewriteEngine On
+
+    # Abaikan permintaan yang sudah memasukkan “public/”
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # Jika request menuju file atau folder yang ada di public, langsung-panggil
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f [OR]
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -d
+    RewriteRule ^(.*)$ /public/$1 [L,NC]
+
+    # Untuk semua request lainnya, arahkan ke public/index.php
+    RewriteRule ^(.*)$ /public/index.php [L]
+</IfModule>

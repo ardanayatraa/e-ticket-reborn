@@ -53,7 +53,7 @@ class TransaksiObserver
             }
 
             // Update poin pelanggan saat transaksi dibayar
-            if ($transaksi->pelanggan) {
+            if ($transaksi->pelanggan && $transaksi->pelanggan->is_member) {
                 $pelanggan = $transaksi->pelanggan;
 
                 $poinTambahan = floor($transaksi->total_transaksi / 500000) * 5;

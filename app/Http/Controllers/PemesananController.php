@@ -127,9 +127,11 @@ class PemesananController extends Controller
             }
 
             // Kurangi poin HANYA jika pelanggan memilih menggunakan poin
-            if ($pointsUsed > 0) {
-                $pelanggan->decrement('points', $pointsUsed);
-            }
+           if ($pointsUsed > 0) {
+    $pelanggan->points = max(0, $pelanggan->points - $pointsUsed);
+    $pelanggan->save();
+}
+
 
             // Loop simpan data pemesanan
             foreach ($request->mobil_ids as $index => $mobilId) {

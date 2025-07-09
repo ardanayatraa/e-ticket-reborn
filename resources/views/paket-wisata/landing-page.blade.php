@@ -268,13 +268,61 @@
             z-index: 10;
         }
 
-        /* Confirmation Modal Styles */
-        .confirmation-modal {
+        /* Modal Styles - FIXED SCROLLING ISSUE */
+        .modal-overlay {
             backdrop-filter: blur(8px);
+            /* Make the overlay scrollable */
+            overflow-y: auto;
+            /* Ensure proper positioning */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Center content with padding for mobile */
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 1rem;
+            /* Add minimum padding for mobile */
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            z-index: 50; /* Default z-index untuk modal biasa */
+        }
+
+        /* Modal Login dan Register - Lapisan Paling Depan */
+        #modalLogin,
+        #modalRegister {
+            z-index: 9999 !important; /* Z-index tertinggi untuk login/register */
+        }
+
+        /* Backdrop khusus untuk login/register */
+        #modalLogin .modal-overlay,
+        #modalRegister .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.75) !important; /* Backdrop lebih gelap */
+            backdrop-filter: blur(12px) !important; /* Blur lebih kuat */
         }
 
         .modal-content {
             animation: modalSlideIn 0.3s ease-out;
+            /* Ensure modal can shrink on small screens */
+            width: 100%;
+            max-width: 28rem; /* max-w-md equivalent */
+            /* Allow content to determine height */
+            max-height: calc(100vh - 4rem);
+            /* Make modal content scrollable if needed */
+            overflow-y: auto;
+            /* Ensure modal stays in view */
+            margin: auto 0;
+        }
+
+        /* For larger modals */
+        .modal-content-large {
+            max-width: 72rem; /* max-w-6xl equivalent */
+        }
+
+        .modal-content-xl {
+            max-width: 80rem; /* max-w-5xl equivalent */
         }
 
         @keyframes modalSlideIn {
@@ -286,6 +334,27 @@
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Mobile modal adjustments */
+        @media (max-width: 640px) {
+            .modal-overlay {
+                padding: 0.5rem;
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+                align-items: flex-start;
+            }
+
+            .modal-content {
+                max-height: calc(100vh - 2rem);
+                margin: 0;
+            }
+
+            /* Ensure modal content is scrollable on mobile */
+            .modal-body {
+                max-height: calc(100vh - 8rem);
+                overflow-y: auto;
             }
         }
 
@@ -441,7 +510,7 @@
                                     class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-user-edit mr-2"></i>Update Profil
                                 </button>
-                                <form method="POST" action="{{ route('logout') }}" class="block">
+                                <form method="POST" action="{{ route('pelanggan.logout') }}" class="block">
                                     @csrf
                                     <button type="submit"
                                         class="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">
@@ -717,11 +786,10 @@
         </div>
     </section>
 
-    <!-- Login Modal -->
-    <div id="modalLogin"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
-            <div class="p-8">
+    <!-- Login Modal - FIXED SCROLLING -->
+    <div id="modalLogin" class="hidden modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Login Pelanggan</h3>
                     <button onclick="tutupModalLogin()" class="text-gray-500 hover:text-gray-700 p-2">
@@ -774,11 +842,10 @@
         </div>
     </div>
 
-    <!-- Register Modal -->
-    <div id="modalRegister"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
-            <div class="p-8">
+    <!-- Register Modal - FIXED SCROLLING -->
+    <div id="modalRegister" class="hidden modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Daftar Pelanggan</h3>
                     <button onclick="tutupModalRegister()" class="text-gray-500 hover:text-gray-700 p-2">
@@ -848,10 +915,9 @@
     </div>
 
     <!-- Member Upgrade Modal -->
-    <div id="modalMember"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
-            <div class="p-8">
+    <div id="modalMember" class="hidden modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Upgrade ke Member</h3>
                     <button onclick="tutupModalMember()" class="text-gray-500 hover:text-gray-700 p-2">
@@ -903,10 +969,9 @@
     </div>
 
     <!-- Dashboard Modal -->
-    <div id="modalDashboard"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-6xl modal-content max-h-[90vh] overflow-y-auto">
-            <div class="p-8">
+    <div id="modalDashboard" class="hidden modal-overlay">
+        <div class="modal-content modal-content-large bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Dashboard Member</h3>
                     <button onclick="tutupModalDashboard()" class="text-gray-500 hover:text-gray-700 p-2">
@@ -945,9 +1010,6 @@
                                             {{ Auth::guard('pelanggan')->user()->member_since->format('d M Y') }}
                                         </p>
                                     </div>
-
-                                    <!-- Points Redemption Section -->
-
                                 </div>
                             @else
                                 <div class="text-center p-6 bg-orange-50 rounded-lg">
@@ -1087,10 +1149,9 @@
     </div>
 
     <!-- Profile Update Modal -->
-    <div id="modalProfile"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
-            <div class="p-8">
+    <div id="modalProfile" class="hidden modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-2xl font-bold text-gray-800">Update Profil</h3>
                     <button onclick="tutupModalProfile()" class="text-gray-500 hover:text-gray-700 p-2">
@@ -1161,10 +1222,9 @@
     </div>
 
     <!-- Detail Paket Modal -->
-    <div id="modalDetailPaket"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl modal-content max-h-[90vh] overflow-y-auto">
-            <div class="p-8">
+    <div id="modalDetailPaket" class="hidden modal-overlay">
+        <div class="modal-content modal-content-xl bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 id="detailPaketJudul" class="text-2xl font-bold text-gray-800"></h3>
                     <button onclick="tutupModalDetailPaket()" class="text-gray-500 hover:text-gray-700 p-2">
@@ -1180,12 +1240,10 @@
     </div>
 
     <!-- Booking Modal (Enhanced) -->
-    <div id="kontainerPicker"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-start justify-center p-0 z-50 backdrop-blur-sm overflow-y-auto">
-        <div
-            class="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-lg md:max-w-5xl my-4 sm:my-8 mx-3 sm:mx-auto animate-fadeIn">
+    <div id="kontainerPicker" class="hidden modal-overlay overflow-y-auto">
+        <div class="modal-content modal-content-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl my-4 sm:my-8 mx-3 sm:mx-auto animate-fadeIn">
             {{-- STEP 1 --}}
-            <div id="step1" class="p-4 sm:p-6">
+            <div id="step1" class="modal-body p-4 sm:p-6">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
                         <h4 class="text-lg sm:text-2xl font-bold text-gray-800">1. Pilih Tanggal & Mobil</h4>
@@ -1205,7 +1263,7 @@
                     <div class="flex items-center">
                         <i class="fas fa-exclamation-triangle text-orange-600 mr-2"></i>
                         <span class="text-orange-800 text-sm font-medium">
-                            Booking untuk besok hanya tersedia sampai jam 17:00. Setelah itu semua mobil tidak tersedia
+                            Booking untuk besok hanya tersedia sampai jam 21:00. Setelah itu semua mobil tidak tersedia
                             karena kantor tutup jam 21:00.
                         </span>
                     </div>
@@ -1254,7 +1312,10 @@
                     {{-- Mobil --}}
                     <div class="w-full lg:w-1/2">
                         <div class="flex justify-between items-center mb-3">
-                            <h5 class="font-medium text-gray-700 text-base sm:text-lg">Mobil Tersedia</h5>
+                            <h5 class="font-medium text-gray-700 text-base sm:text-lg">Mobil
+</cut_off_point>
+
+Tersedia</h5>
                             <button id="tombolResetPilihan" onclick="resetPilihanMobil()"
                                 class="hidden text-sm text-red-600 hover:text-red-800 font-medium">
                                 <i class="fas fa-undo mr-1"></i> Reset Pilihan
@@ -1303,7 +1364,7 @@
             </div>
 
             {{-- STEP 2 --}}
-            <div id="step2" class="hidden p-4 sm:p-6 bg-gray-50 max-h-screen overflow-y-auto">
+            <div id="step2" class="hidden modal-body p-4 sm:p-6 bg-gray-50">
                 <div class="flex justify-between items-center mb-4">
                     <h4 class="text-lg sm:text-2xl font-bold text-gray-800">2. Lengkapi Data Pemesan</h4>
                     <button onclick="tutupPicker()" class="text-gray-500 hover:text-gray-700 p-2 touch-target">
@@ -1445,10 +1506,9 @@
     </div>
 
     <!-- Multiple Booking Confirmation Modal -->
-    <div id="modalKonfirmasiMultiple"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg modal-content">
-            <div class="p-6 text-center">
+    <div id="modalKonfirmasiMultiple" class="hidden modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-6 text-center">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-orange-100 mb-4">
                     <i class="fas fa-exclamation-triangle text-orange-600 text-2xl"></i>
                 </div>
@@ -1483,10 +1543,9 @@
     </div>
 
     <!-- Success Confirmation Modal -->
-    <div id="modalKonfirmasi"
-        class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 confirmation-modal">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md modal-content">
-            <div class="p-6 text-center">
+    <div id="modalKonfirmasi" class="hidden modal-overlay">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl">
+            <div class="modal-body p-6 text-center">
                 <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
                     <i class="fas fa-check text-green-600 text-2xl"></i>
                 </div>
@@ -1562,7 +1621,7 @@
                     <ul class="space-y-2 text-gray-300 text-sm sm:text-base max-w-xs mx-auto lg:mx-0">
                         <li class="flex justify-between">
                             <span>Senin - Jumat:</span>
-                            <span>08:00 - 17:00</span>
+                            <span>08:00 - 21:00</span>
                         </li>
                         <li class="flex justify-between">
                             <span>Sabtu:</span>
@@ -2471,351 +2530,265 @@
 
         function lanjutkanKeStep2() {
             // Fill preview
-            document.getElementById('previewPaket').innerText = terpilih.paketNama;
-            document.getElementById('previewTanggal').innerText = formatTanggalTampilan(terpilih.tanggal);
+            document.getElementById('previewPaket').innerText =
+                terpilih.paketNama;
+            document.getElementById('previewTanggal').innerText = new Date(terpilih.tanggal).toLocaleDateString(
+                'id-ID', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
             document.getElementById('previewWaktu').innerText = terpilih.waktu;
 
+            // Preview foto
+            const wrapperPreviewFoto = document.getElementById('wrapperPreviewFoto');
+            const previewFoto = document.getElementById('previewFoto');
+
+            if (terpilih.fotoPath) {
+                previewFoto.src = terpilih.fotoPath;
+                wrapperPreviewFoto.classList.remove('hidden');
+            } else {
+                previewFoto.src = '/placeholder.svg';
+                wrapperPreviewFoto.classList.add('hidden');
+            }
+
+            // Preview mobil
             const previewKendaraan = document.getElementById('previewKendaraan');
             previewKendaraan.innerHTML = '';
+            terpilih.mobil.forEach(mobil => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-end space-x-2';
+                div.innerHTML = `
+                    <span class="text-sm font-medium">${mobil.nama}</span>
+                    <i class="fas fa-user text-gray-500"></i>
+                    <span class="text-xs text-gray-500">${mobil.kursi} Kursi</span>
+                `;
+                previewKendaraan.appendChild(div);
+            });
 
-            let totalHarga = 0;
-
-            const hiddenMobilInputs = document.getElementById('hiddenMobilInputs');
-            hiddenMobilInputs.innerHTML = '';
-
-            const participantInputsContainer = document.getElementById('participantInputsContainer');
-            participantInputsContainer.innerHTML = '';
-
+            // Input hidden
             document.getElementById('inputPaketId').value = terpilih.paketId;
             document.getElementById('inputTanggal').value = terpilih.tanggal;
             document.getElementById('inputWaktu').value = terpilih.waktu;
+            document.getElementById('inputPointsUsed').value = terpilih.pointsUsed;
 
-            terpilih.mobil.forEach((mobil, index) => {
-                const mobilItem = document.createElement('div');
-                mobilItem.className = 'font-medium text-gray-800 mb-1';
-                mobilItem.innerHTML =
-                    `${index + 1}. ${mobil.nama} <span class="text-xs text-gray-500">(${mobil.kursi} kursi)</span>`;
-                previewKendaraan.appendChild(mobilItem);
-
-                const mobilIdInput = document.createElement('input');
-                mobilIdInput.type = 'hidden';
-                mobilIdInput.name = `mobil_ids[]`;
-                mobilIdInput.value = mobil.id;
-                hiddenMobilInputs.appendChild(mobilIdInput);
-
-                const participantCard = document.createElement('div');
-                participantCard.className = 'bg-white p-4 sm:p-5 rounded-xl shadow-lg space-y-3 sm:space-y-4';
-                participantCard.innerHTML = `
-                    <div class="flex justify-between items-center">
-                        <h5 class="text-base sm:text-lg font-semibold text-gray-700">
-                            Mobil ${index + 1}: ${mobil.nama}
-                        </h5>
-                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                            Maks: ${mobil.kursi} kursi
-                        </span>
-                    </div>
-                    <label class="block">
-                        <span class="text-gray-600 font-medium text-sm sm:text-base">Jumlah Peserta</span>
-                        <div class="relative">
-                            <input
-                                type="text"
-                                name="jumlah_peserta[]"
-                                inputmode="numeric"
-                                pattern="\\d*"
-                                oninput="validasiJumlahPeserta(this, ${mobil.kursi}, ${index})"
-                                required
-                                class="mt-1 block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm
-                                focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm sm:text-base"
-                                placeholder="Masukkan jumlah peserta"
-                            />
-                        </div>
-                        <div class="hidden error-message" id="errorPeserta-${index}">
-                            Jumlah peserta tidak boleh melebihi kapasitas mobil
-                        </div>
-                    </label>
-                `;
-                participantInputsContainer.appendChild(participantCard);
-
-                totalHarga += terpilih.harga;
+            // Input mobil
+            const hiddenMobilInputs = document.getElementById('hiddenMobilInputs');
+            hiddenMobilInputs.innerHTML = '';
+            terpilih.mobil.forEach(mobil => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'mobil_ids[]';
+                input.value = mobil.id;
+                hiddenMobilInputs.appendChild(input);
             });
 
-            // Update price display
+            // Participant inputs
+            const participantInputsContainer = document.getElementById('participantInputsContainer');
+            participantInputsContainer.innerHTML = '';
+
+            terpilih.mobil.forEach((mobil, index) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded-xl shadow-lg';
+                div.innerHTML = `
+                    <h5 class="text-lg font-semibold mb-3 text-gray-700">Mobil ${index + 1}: ${mobil.nama}</h5>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2 text-sm">Jumlah Peserta</label>
+                        <input type="number" name="jumlah_peserta[]" min="1" max="${mobil.kursi}" value="${mobil.kursi}"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm" required>
+                    </div>
+                `;
+                participantInputsContainer.appendChild(div);
+            });
+
+            // Update total price
             updateTotalPrice();
 
-            const fotoEl = document.getElementById('previewFoto');
-            fotoEl.src = terpilih.fotoPath || '/placeholder.svg';
-            document.getElementById('wrapperPreviewFoto').classList.remove('hidden');
-
-            const pesanSukses = document.getElementById('pesanSukses');
-            if (terpilih.mobil.length > 1) {
-                pesanSukses.textContent =
-                    `${terpilih.mobil.length} e-ticket akan didapatkan setelah melakukan pembayaran, segera melakukan pembayaran di kantor kami, sementara booking Anda akan kami hold selama 4 jam.`;
-            } else {
-                pesanSukses.textContent =
-                    `E-ticket akan didapatkan setelah melakukan pembayaran, segera melakukan pembayaran di kantor kami, sementara booking Anda akan kami hold selama 4 jam.`;
-            }
-
-            if (window.innerWidth < 768) {
-                window.scrollTo(0, 0);
-            }
-
+            // Show step 2
             document.getElementById('step1').classList.add('hidden');
             document.getElementById('step2').classList.remove('hidden');
         }
 
-        function validasiJumlahPeserta(input, maksKursi, index) {
-            // Remove non-numeric characters
-            input.value = input.value.replace(/\D/g, '');
-
-            const jumlah = parseInt(input.value) || 1;
-            const divError = document.getElementById(`errorPeserta-${index}`);
-            const tombolKonfirmasiBooking = document.getElementById('tombolKonfirmasiBooking');
-
-            if (jumlah > maksKursi) {
-                input.classList.add('input-error');
-                divError.classList.remove('hidden');
-                divError.textContent = `Jumlah peserta tidak boleh melebihi ${maksKursi} orang (kapasitas mobil)`;
-
-                tombolKonfirmasiBooking.disabled = true;
-                tombolKonfirmasiBooking.classList.add('opacity-50', 'cursor-not-allowed');
-            } else if (jumlah < 1) {
-                input.classList.add('input-error');
-                divError.classList.remove('hidden');
-                divError.textContent = 'Jumlah peserta minimal 1 orang';
-
-                tombolKonfirmasiBooking.disabled = true;
-                tombolKonfirmasiBooking.classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                input.classList.remove('input-error');
-                divError.classList.add('hidden');
-
-                // Check if all inputs are valid
-                const semuaValid = Array.from(document.querySelectorAll('input[name="jumlah_peserta[]"]'))
-                    .every(inp => !inp.classList.contains('input-error') && parseInt(inp.value) >= 1);
-
-                if (semuaValid) {
-                    tombolKonfirmasiBooking.disabled = false;
-                    tombolKonfirmasiBooking.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            }
-        }
-
-        function formatTanggalTampilan(strTanggal) {
-            if (!strTanggal) return '';
-
-            const bagian = strTanggal.split('-');
-            if (bagian.length !== 3) return strTanggal;
-
-            return `${bagian[2]}-${bagian[1]}-${bagian[0]}`;
-        }
-
         function kembaliKeStep1() {
-            document.getElementById('step2').classList.add('hidden');
             document.getElementById('step1').classList.remove('hidden');
-
-            if (window.innerWidth < 768) {
-                window.scrollTo(0, 0);
-            }
+            document.getElementById('step2').classList.add('hidden');
         }
 
-        // Pagination and search functionality
-        function initializePagination() {
-            const paketPerHalaman = 6;
-            const kontainerPaket = document.getElementById('packageContainer');
-            const kontainerPaginasi = document.getElementById('pagination');
-            const infoPaginasi = document.getElementById('paginationInfo');
-            const infoHalamanSekarang = document.getElementById('currentPageInfo');
-            const infoTotalHalaman = document.getElementById('totalPagesInfo');
-            const inputPencarian = document.getElementById('searchPackage');
-            const tombolHapusPencarian = document.getElementById('clearSearch');
-            const pesanTidakAdaHasil = document.getElementById('noResults');
-            const tombolResetPencarian = document.getElementById('resetSearch');
-            const indikatorFilter = document.getElementById('filterIndicator');
-            const jumlahHasil = document.getElementById('resultCount');
-            const tombolHapusFilter = document.getElementById('clearFilter');
+        // Search functionality
+        const searchPackage = document.getElementById('searchPackage');
+        const clearSearch = document.getElementById('clearSearch');
+        const packageContainer = document.getElementById('packageContainer');
+        const noResults = document.getElementById('noResults');
+        const resetSearch = document.getElementById('resetSearch');
+        const filterIndicator = document.getElementById('filterIndicator');
+        const resultCount = document.getElementById('resultCount');
+        const clearFilter = document.getElementById('clearFilter');
 
-            const semuaPaket = Array.from(kontainerPaket.querySelectorAll('.package-card'));
-            let paketTerfilter = [...semuaPaket];
-            let halamanSekarang = 1;
+        searchPackage.addEventListener('input', function() {
+            const searchTerm = searchPackage.value.toLowerCase();
+            let resultFound = false;
+            let count = 0;
 
-            function perbaruiTampilanPaginasi() {
-                const tampilMobile = window.innerWidth < 480;
+            packageContainer.querySelectorAll('.package-card').forEach(function(card) {
+                const packageName = card.dataset.name;
+                const packageLocation = card.dataset.location;
 
-                if (tampilMobile) {
-                    kontainerPaginasi.classList.add('pagination-compact');
-                    infoPaginasi.classList.remove('hidden');
+                if (packageName.includes(searchTerm) || packageLocation.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    resultFound = true;
+                    count++;
                 } else {
-                    kontainerPaginasi.classList.remove('pagination-compact');
-                    infoPaginasi.classList.add('hidden');
+                    card.style.display = 'none';
                 }
+            });
+
+            if (searchTerm !== '' && resultFound) {
+                noResults.style.display = 'none';
+                filterIndicator.style.display = 'block';
+                resultCount.textContent = count;
+                clearSearch.classList.remove('hidden');
+            } else if (searchTerm !== '' && !resultFound) {
+                noResults.style.display = 'block';
+                filterIndicator.style.display = 'none';
+                clearSearch.classList.remove('hidden');
+            } else {
+                noResults.style.display = 'none';
+                filterIndicator.style.display = 'none';
+                clearSearch.classList.add('hidden');
+
+                packageContainer.querySelectorAll('.package-card').forEach(function(card) {
+                    card.style.display = 'block';
+                });
             }
 
-            function inisialisasiPaginasi() {
-                kontainerPaginasi.innerHTML = '';
+            updatePagination();
+        });
 
-                const totalHalaman = Math.ceil(paketTerfilter.length / paketPerHalaman);
+        clearSearch.addEventListener('click', function() {
+            searchPackage.value = '';
+            noResults.style.display = 'none';
+            filterIndicator.style.display = 'none';
+            clearSearch.classList.add('hidden');
 
-                infoHalamanSekarang.textContent = halamanSekarang;
-                infoTotalHalaman.textContent = totalHalaman;
+            packageContainer.querySelectorAll('.package-card').forEach(function(card) {
+                card.style.display = 'block';
+            });
 
-                if (totalHalaman > 1) {
-                    const tombolSebelum = document.createElement('button');
-                    tombolSebelum.className =
-                        'pagination-btn px-3 py-3 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 touch-target';
-                    tombolSebelum.innerHTML = '<i class="fas fa-chevron-left"></i>';
-                    tombolSebelum.disabled = halamanSekarang === 1;
-                    tombolSebelum.style.opacity = halamanSekarang === 1 ? '0.5' : '1';
-                    tombolSebelum.addEventListener('click', () => {
-                        if (halamanSekarang > 1) {
-                            halamanSekarang--;
-                            renderPaket();
-                            if (window.innerWidth < 768) {
-                                document.getElementById('searchBarContainer').scrollIntoView({
-                                    behavior: 'smooth'
-                                });
-                            }
-                        }
-                    });
-                    kontainerPaginasi.appendChild(tombolSebelum);
+            updatePagination();
+        });
 
-                    for (let i = 1; i <= totalHalaman; i++) {
-                        const tombolHalaman = document.createElement('button');
-                        tombolHalaman.className =
-                            `pagination-btn pagination-number px-3 py-3 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 touch-target ${halamanSekarang === i ? 'active pagination-current' : ''}`;
-                        tombolHalaman.textContent = i;
-                        tombolHalaman.addEventListener('click', () => {
-                            halamanSekarang = i;
-                            renderPaket();
-                            if (window.innerWidth < 768) {
-                                document.getElementById('searchBarContainer').scrollIntoView({
-                                    behavior: 'smooth'
-                                });
-                            }
-                        });
-                        kontainerPaginasi.appendChild(tombolHalaman);
-                    }
+        resetSearch.addEventListener('click', function() {
+            searchPackage.value = '';
+            noResults.style.display = 'none';
+            filterIndicator.style.display = 'none';
+            clearSearch.classList.add('hidden');
 
-                    const tombolSelanjutnya = document.createElement('button');
-                    tombolSelanjutnya.className =
-                        'pagination-btn px-3 py-3 rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 touch-target';
-                    tombolSelanjutnya.innerHTML = '<i class="fas fa-chevron-right"></i>';
-                    tombolSelanjutnya.disabled = halamanSekarang === totalHalaman;
-                    tombolSelanjutnya.style.opacity = halamanSekarang === totalHalaman ? '0.5' : '1';
-                    tombolSelanjutnya.addEventListener('click', () => {
-                        if (halamanSekarang < totalHalaman) {
-                            halamanSekarang++;
-                            renderPaket();
-                            if (window.innerWidth < 768) {
-                                document.getElementById('searchBarContainer').scrollIntoView({
-                                    behavior: 'smooth'
-                                });
-                            }
-                        }
-                    });
-                    kontainerPaginasi.appendChild(tombolSelanjutnya);
+            packageContainer.querySelectorAll('.package-card').forEach(function(card) {
+                card.style.display = 'block';
+            });
+
+            updatePagination();
+        });
+
+        clearFilter.addEventListener('click', function() {
+            searchPackage.value = '';
+            noResults.style.display = 'none';
+            filterIndicator.style.display = 'none';
+            clearSearch.classList.add('hidden');
+
+            packageContainer.querySelectorAll('.package-card').forEach(function(card) {
+                card.style.display = 'block';
+            });
+
+            updatePagination();
+        });
+
+        // Pagination functionality
+        const itemsPerPage = 6;
+        let currentPage = 1;
+        let packages = Array.from(document.getElementById('packageContainer').children);
+        const paginationContainer = document.getElementById('pagination');
+        const paginationInfo = document.getElementById('paginationInfo');
+        const currentPageInfo = document.getElementById('currentPageInfo');
+        const totalPagesInfo = document.getElementById('totalPagesInfo');
+
+        function displayPage(page) {
+            packages.forEach((item, index) => {
+                if (index >= (page - 1) * itemsPerPage && index < page * itemsPerPage) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
                 }
-            }
+            });
+        }
 
-            function renderPaket() {
-                semuaPaket.forEach(pkg => {
-                    pkg.classList.add('hidden');
+        function setupPagination() {
+            const totalPages = Math.ceil(packages.length / itemsPerPage);
+            paginationContainer.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.classList.add('pagination-btn', 'touch-target');
+                btn.addEventListener('click', () => {
+                    currentPage = i;
+                    displayPage(currentPage);
+                    updatePaginationButtons();
+                    updatePaginationInfo();
                 });
 
-                if (paketTerfilter.length === 0) {
-                    pesanTidakAdaHasil.classList.remove('hidden');
-                    kontainerPaginasi.classList.add('hidden');
-                    infoPaginasi.classList.add('hidden');
-
-                    if (inputPencarian.value.trim() !== '') {
-                        indikatorFilter.classList.remove('hidden');
-                        jumlahHasil.textContent = '0';
-                    } else {
-                        indikatorFilter.classList.add('hidden');
-                    }
-                } else {
-                    pesanTidakAdaHasil.classList.add('hidden');
-                    kontainerPaginasi.classList.remove('hidden');
-
-                    if (inputPencarian.value.trim() !== '') {
-                        indikatorFilter.classList.remove('hidden');
-                        jumlahHasil.textContent = paketTerfilter.length;
-                    } else {
-                        indikatorFilter.classList.add('hidden');
-                    }
-
-                    const indeksAwal = (halamanSekarang - 1) * paketPerHalaman;
-                    const indeksAkhir = Math.min(indeksAwal + paketPerHalaman, paketTerfilter.length);
-
-                    for (let i = indeksAwal; i < indeksAkhir; i++) {
-                        paketTerfilter[i].classList.remove('hidden');
-                    }
-
-                    inisialisasiPaginasi();
-                    perbaruiTampilanPaginasi();
-                }
+                paginationContainer.appendChild(btn);
             }
 
-            function filterPaket(kataPencarian) {
-                kataPencarian = kataPencarian.toLowerCase().trim();
+            updatePaginationButtons();
+            updatePaginationInfo();
+        }
 
-                if (kataPencarian === '') {
-                    paketTerfilter = [...semuaPaket];
-                    tombolHapusPencarian.classList.add('hidden');
-                    indikatorFilter.classList.add('hidden');
-                } else {
-                    tombolHapusPencarian.classList.remove('hidden');
-                    paketTerfilter = semuaPaket.filter(pkg => {
-                        const nama = pkg.dataset.name || '';
-                        const lokasi = pkg.dataset.location || '';
-                        return nama.includes(kataPencarian) || lokasi.includes(kataPencarian);
-                    });
-
-                    paketTerfilter.forEach(pkg => {
-                        pkg.classList.add('highlight-search');
-                        setTimeout(() => {
-                            pkg.classList.remove('highlight-search');
-                        }, 1500);
-                    });
+        function updatePaginationButtons() {
+            document.querySelectorAll('.pagination-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.textContent) === currentPage) {
+                    btn.classList.add('active');
                 }
+            });
+        }
 
-                halamanSekarang = 1;
-                renderPaket();
+        function updatePaginationInfo() {
+            const totalPages = Math.ceil(packages.length / itemsPerPage);
+            currentPageInfo.textContent = currentPage;
+            totalPagesInfo.textContent = totalPages;
+        }
+
+        function checkMobileView() {
+            if (window.innerWidth <= 640) {
+                paginationContainer.classList.remove('space-x-1', 'sm:space-x-2', 'pagination-compact');
+                paginationInfo.classList.remove('hidden');
+            } else {
+                paginationContainer.classList.add('space-x-1', 'sm:space-x-2', 'pagination-compact');
+                paginationInfo.classList.add('hidden');
             }
+        }
 
-            let timeoutPencarian;
-            inputPencarian.addEventListener('input', (e) => {
-                clearTimeout(timeoutPencarian);
-                timeoutPencarian = setTimeout(() => {
-                    filterPaket(e.target.value);
-                }, 300);
+        function updatePagination() {
+            packages = Array.from(document.getElementById('packageContainer').children);
+            currentPage = 1;
+            displayPage(currentPage);
+            setupPagination();
+            updatePaginationButtons();
+            updatePaginationInfo();
+        }
+
+        function initializePagination() {
+            displayPage(currentPage);
+            setupPagination();
+            checkMobileView();
+
+            window.addEventListener('resize', () => {
+                checkMobileView();
             });
-
-            tombolHapusPencarian.addEventListener('click', () => {
-                inputPencarian.value = '';
-                filterPaket('');
-                inputPencarian.focus();
-            });
-
-            tombolResetPencarian.addEventListener('click', () => {
-                inputPencarian.value = '';
-                filterPaket('');
-                inputPencarian.focus();
-            });
-
-            tombolHapusFilter.addEventListener('click', () => {
-                inputPencarian.value = '';
-                filterPaket('');
-                inputPencarian.focus();
-            });
-
-            // Initialize
-            renderPaket();
-            perbaruiTampilanPaginasi();
-
-            // Handle resize
-            window.addEventListener('resize', perbaruiTampilanPaginasi);
         }
     </script>
+    @livewireScripts
 </body>
 
 </html>

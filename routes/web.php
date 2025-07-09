@@ -15,6 +15,7 @@ use App\Http\Controllers\MobilController;
 use App\Http\Controllers\Auth\PelangganAuthController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\BookingController;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,10 +39,15 @@ Route::middleware([
 
     Route::resource('admin', AdminController::class);
 
-    // Paket Wisata Routes - exclude 'show' since it's public
-    Route::resource('paket-wisata', PaketWisataController::class)
-        ->except(['show'])
-        ->parameters(['paket-wisata' => 'paketwisata']);
+    // Paket Wisata Routes - PERBAIKAN: Gunakan primary key untuk model binding
+       Route::prefix('paket-wisata')->name('paket-wisata.')->group(function () {
+        Route::get('/', [PaketWisataController::class, 'index'])->name('index');
+        Route::get('/create', [PaketWisataController::class, 'create'])->name('create');
+        Route::post('/', [PaketWisataController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [PaketWisataController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PaketWisataController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PaketWisataController::class, 'destroy'])->name('destroy');
+       });
 
     Route::resource('pelanggan', PelangganController::class);
     Route::resource('sopir', SopirController::class);
@@ -73,6 +79,15 @@ Route::middleware('auth:pelanggan')->group(function () {
     Route::post('/pelanggan/redeem-points', [PelangganController::class, 'redeemPoints'])
         ->name('pelanggan.redeem.points');
 });
+
+
+Route::post('pelanggan/logout', function () {
+    Auth::guard('pelanggan')->logout();
+    session()->invalidate();
+    session()->regenerateToken();
+
+    return redirect('/'); // Ganti sesuai kebutuhan, bisa ke route('pelanggan.login') atau lainnya
+})->name('pelanggan.logout');
 
 // Member Routes (Protected - Pelanggan only)
 Route::middleware('auth:pelanggan')->prefix('member')->group(function () {
