@@ -7,6 +7,7 @@ use App\Models\Pemesanan;
 use App\Models\Pelanggan;
 use App\Models\PaketWisata;
 use App\Models\Transaksi;
+use App\Models\PointSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,6 +57,8 @@ class PemesananController extends Controller
                 'jumlah_peserta'   => 'required|array|min:1',
                 'jumlah_peserta.*' => 'required|integer|min:1',
                 'points_used'      => 'nullable|integer|min:0', // OPSIONAL - bisa 0 atau tidak diisi
+                'update_alamat'    => 'nullable|string|in:true,false',
+                'alamat_baru'      => 'nullable|string|required_if:update_alamat,true',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
@@ -78,6 +81,11 @@ class PemesananController extends Controller
             $totalHarga = 0;
             $pointsUsed = (int) ($request->points_used ?? 0); // Default 0 jika tidak diisi
             $totalDiscount = 0;
+            
+            // Update alamat jika diminta
+            if ($request->update_alamat === 'true' && $request->alamat_baru) {
+                $pelanggan->update(['alamat' => $request->alamat_baru]);
+            }
 
             // HANYA validasi poin jika pelanggan MEMILIH untuk menggunakan poin
             if ($pointsUsed > 0) {
@@ -89,12 +97,16 @@ class PemesananController extends Controller
                     throw new \Exception("Poin tidak mencukupi. Anda memiliki {$pelanggan->points} poin");
                 }
 
-                if ($pointsUsed % 10 !== 0) {
-                    throw new \Exception("Poin harus dalam kelipatan 10");
+                // Ambil pengaturan poin dari database
+                $pointsForDiscount = (int) PointSetting::getValue('points_for_discount', 10);
+                $discountPerPoints = (int) PointSetting::getValue('discount_per_points', 10000);
+                
+                if ($pointsUsed % $pointsForDiscount !== 0) {
+                    throw new \Exception("Poin harus dalam kelipatan {$pointsForDiscount}");
                 }
 
-                // Hitung diskon: 10 poin = Rp 10.000
-                $totalDiscount = ($pointsUsed / 10) * 10000;
+                // Hitung diskon berdasarkan pengaturan
+                $totalDiscount = ($pointsUsed / $pointsForDiscount) * $discountPerPoints;
             }
 
             // Validasi kapasitas dan durasi
@@ -123,7 +135,7 @@ class PemesananController extends Controller
                 $finalTotal = 0;
                 // Adjust discount jika melebihi total harga
                 $totalDiscount = $totalHarga;
-                $pointsUsed = ($totalDiscount / 10000) * 10; // Recalculate points used
+                $pointsUsed = ($totalDiscount / $discountPerPoints) * $pointsForDiscount; // Recalculate points used
             }
 
             // Kurangi poin HANYA jika pelanggan memilih menggunakan poin

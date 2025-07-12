@@ -1439,15 +1439,15 @@ Tersedia</h5>
 
                                             <div id="pointsInputSection" class="hidden">
                                                 <div class="flex items-center space-x-2">
-                                                    <input type="number" id="pointsToUse" min="10"
+                                                    <input type="number" id="pointsToUse" min="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
                                                         max="{{ Auth::guard('pelanggan')->user()->points }}"
-                                                        step="10" placeholder="10"
+                                                        step="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}" placeholder="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
                                                         onchange="calculatePointsDiscount()"
                                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
                                                     <span class="text-sm text-gray-600">poin</span>
                                                 </div>
                                                 <p class="text-xs text-gray-500 mt-1">
-                                                    10 poin = Rp 10.000 potongan (kelipatan 10)
+                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }} poin = Rp {{ number_format(\App\Models\PointSetting::getValue('discount_per_points', 10000), 0, ',', '.') }} potongan (kelipatan {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }})
                                                 </p>
                                                 <div id="pointsDiscountPreview"
                                                     class="hidden mt-2 text-sm font-medium text-green-600">
@@ -1484,6 +1484,39 @@ Tersedia</h5>
 
                     {{-- Form Data Pemesan --}}
                     <div class="w-full lg:w-1/2 space-y-4">
+                        {{-- Update Alamat Section --}}
+                        <div class="bg-white p-4 rounded-xl shadow-lg">
+                            <h5 class="text-lg font-semibold mb-3 text-gray-700">
+                                <i class="fas fa-map-marker-alt mr-2 text-teal-600"></i>
+                                Alamat Penjemputan
+                            </h5>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2 text-sm">Alamat Saat Ini</label>
+                                    <div class="p-3 bg-gray-50 rounded-lg text-sm text-gray-600">
+                                        {{ Auth::guard('pelanggan')->user()->alamat ?? 'Alamat belum diisi' }}
+                                    </div>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="updateAlamat" onchange="toggleUpdateAlamat()"
+                                        class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                    <label for="updateAlamat" class="ml-2 text-sm text-gray-700">
+                                        Update alamat untuk penjemputan
+                                    </label>
+                                </div>
+                                <div id="alamatInputSection" class="hidden">
+                                    <label class="block text-gray-700 font-medium mb-2 text-sm">Alamat Baru</label>
+                                    <textarea id="alamatBaru" name="alamat_baru" rows="3" 
+                                        placeholder="Masukkan alamat lengkap untuk penjemputan..."
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none"></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Alamat ini akan digunakan untuk penjemputan pada tanggal {{ date('d M Y', strtotime('+1 day')) }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="participantInputsContainer">
                             <!-- Will be populated by JavaScript -->
                         </div>
@@ -1854,48 +1887,7 @@ Tersedia</h5>
             }
         });
 
-        // Points redemption functions
-        function tukarPoin() {
-            const pointsToRedeem = parseInt(document.getElementById('pointsToRedeem').value);
-
-            if (!pointsToRedeem || pointsToRedeem < 10 || pointsToRedeem % 10 !== 0) {
-                alert('Masukkan jumlah poin yang valid (minimal 10, kelipatan 10)');
-                return;
-            }
-
-            if (pointsToRedeem > currentUser.points) {
-                alert('Poin tidak mencukupi');
-                return;
-            }
-
-            if (confirm(
-                    `Apakah Anda yakin ingin menukar ${pointsToRedeem} poin menjadi Rp ${(pointsToRedeem / 10 * 10000).toLocaleString('id-ID')}?`
-                )) {
-                fetch('/pelanggan/redeem-points', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({
-                            points_to_redeem: pointsToRedeem
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.message);
-                            window.location.reload();
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Terjadi kesalahan saat menukar poin');
-                    });
-            }
-        }
+        // Points can only be used for booking discounts, not redeemed for cash
 
         function togglePointsRedemption() {
             const usePoints = document.getElementById('usePoints').checked;
@@ -1906,7 +1898,7 @@ Tersedia</h5>
                 pointsInputSection.classList.remove('hidden');
                 pointsSection.classList.add('points-active');
                 // Set default value
-                document.getElementById('pointsToUse').value = 10;
+                document.getElementById('pointsToUse').value = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
                 calculatePointsDiscount();
             } else {
                 pointsInputSection.classList.add('hidden');
@@ -1916,6 +1908,66 @@ Tersedia</h5>
                 terpilih.discount = 0;
                 updateTotalPrice();
             }
+        }
+
+        function toggleUpdateAlamat() {
+            const updateAlamat = document.getElementById('updateAlamat').checked;
+            const alamatInputSection = document.getElementById('alamatInputSection');
+
+            if (updateAlamat) {
+                alamatInputSection.classList.remove('hidden');
+                // Set default value dari alamat saat ini
+                const alamatSaatIni = currentUser ? currentUser.alamat : '';
+                document.getElementById('alamatBaru').value = alamatSaatIni;
+            } else {
+                alamatInputSection.classList.add('hidden');
+                document.getElementById('alamatBaru').value = '';
+            }
+        }
+
+        function validateParticipantCount(input) {
+            const mobilIndex = input.dataset.mobilIndex;
+            const maxCapacity = parseInt(input.dataset.maxCapacity);
+            const currentValue = parseInt(input.value);
+            const errorElement = document.getElementById(`error-${mobilIndex}`);
+            const tombolKonfirmasi = document.getElementById('tombolKonfirmasiBooking');
+
+            // Validasi input
+            if (currentValue < 1) {
+                input.value = 1;
+                input.classList.add('border-red-500');
+                errorElement.classList.remove('hidden');
+                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Minimal 1 peserta';
+                tombolKonfirmasi.disabled = true;
+                return false;
+            }
+
+            if (currentValue > maxCapacity) {
+                input.value = maxCapacity;
+                input.classList.add('border-red-500');
+                errorElement.classList.remove('hidden');
+                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Maksimal ' + maxCapacity + ' peserta';
+                tombolKonfirmasi.disabled = true;
+                return false;
+            }
+
+            // Input valid
+            input.classList.remove('border-red-500');
+            errorElement.classList.add('hidden');
+            
+            // Cek apakah semua input valid
+            const allInputs = document.querySelectorAll('.participant-input');
+            let allValid = true;
+            allInputs.forEach(input => {
+                const value = parseInt(input.value);
+                const maxCap = parseInt(input.dataset.maxCapacity);
+                if (value < 1 || value > maxCap) {
+                    allValid = false;
+                }
+            });
+
+            tombolKonfirmasi.disabled = !allValid;
+            return true;
         }
 
         function calculatePointsDiscount() {
@@ -1928,12 +1980,15 @@ Tersedia</h5>
                 return calculatePointsDiscount();
             }
 
-            if (pointsToUse % 10 !== 0) {
-                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / 10) * 10;
+            const pointsForDiscount = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
+            const discountPerPoints = {{ \App\Models\PointSetting::getValue('discount_per_points', 10000) }};
+            
+            if (pointsToUse % pointsForDiscount !== 0) {
+                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / pointsForDiscount) * pointsForDiscount;
                 return calculatePointsDiscount();
             }
 
-            const discount = (pointsToUse / 10) * 10000;
+            const discount = (pointsToUse / pointsForDiscount) * discountPerPoints;
 
             terpilih.pointsUsed = pointsToUse;
             terpilih.discount = discount;
@@ -2138,6 +2193,24 @@ Tersedia</h5>
                 return;
             }
 
+            // Validasi kapasitas mobil sebelum submit
+            const allInputs = document.querySelectorAll('.participant-input');
+            let validationError = false;
+            
+            allInputs.forEach(input => {
+                const value = parseInt(input.value);
+                const maxCap = parseInt(input.dataset.maxCapacity);
+                if (value < 1 || value > maxCap) {
+                    validationError = true;
+                    validateParticipantCount(input);
+                }
+            });
+
+            if (validationError) {
+                alert('Mohon periksa jumlah peserta untuk setiap mobil');
+                return;
+            }
+
             const tombolKonfirmasi = document.getElementById('tombolKonfirmasiBooking');
             tombolKonfirmasi.disabled = true;
             tombolKonfirmasi.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
@@ -2162,6 +2235,14 @@ Tersedia</h5>
             formData.append('tanggal', terpilih.tanggal);
             formData.append('jam_mulai', terpilih.waktu);
             formData.append('points_used', terpilih.pointsUsed);
+            
+            // Add address data
+            const updateAlamat = document.getElementById('updateAlamat').checked;
+            formData.append('update_alamat', updateAlamat.toString());
+            if (updateAlamat) {
+                const alamatBaru = document.getElementById('alamatBaru').value;
+                formData.append('alamat_baru', alamatBaru);
+            }
 
             // Add selected cars data
             terpilih.mobil.forEach((mobil, index) => {
@@ -2595,7 +2676,17 @@ Tersedia</h5>
                     <div class="mb-4">
                         <label class="block text-gray-700 font-medium mb-2 text-sm">Jumlah Peserta</label>
                         <input type="number" name="jumlah_peserta[]" min="1" max="${mobil.kursi}" value="${mobil.kursi}"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm" required>
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm participant-input" 
+                            data-mobil-index="${index}" data-max-capacity="${mobil.kursi}" required
+                            onchange="validateParticipantCount(this)">
+                        <div class="mt-1 text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Kapasitas maksimal: ${mobil.kursi} orang
+                        </div>
+                        <div class="mt-1 text-xs text-red-500 hidden" id="error-${index}">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            Jumlah peserta tidak boleh melebihi kapasitas mobil
+                        </div>
                     </div>
                 `;
                 participantInputsContainer.appendChild(div);

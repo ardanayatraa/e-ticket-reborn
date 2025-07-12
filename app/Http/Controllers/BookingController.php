@@ -42,16 +42,7 @@ class BookingController extends Controller
 
                 SendTicketJob::dispatch($transaksi);
 
-            // Add points for member if applicable
-            $pelanggan = $transaksi->pelanggan;
-            if ($pelanggan && $pelanggan->is_member) {
-                $pointsAdded = $pelanggan->addPoints($transaksi->deposit);
-                Log::info('Points added to member after booking payment', [
-                    'pelanggan_id' => $pelanggan->pelanggan_id,
-                    'points_added' => $pointsAdded,
-                    'transaction_id' => $transaksi->transaksi_id
-                ]);
-            }
+            // Points will be added automatically by observer when status changes to 'paid'
 
             return response()->json([
                 'success' => true,
@@ -97,16 +88,7 @@ class BookingController extends Controller
                         'deposit' => $request->gross_amount,
                     ]);
 
-                    // Add points for member
-                    $pelanggan = $transaksi->pelanggan;
-                    if ($pelanggan && $pelanggan->is_member) {
-                        $pointsAdded = $pelanggan->addPoints($transaksi->deposit);
-                        Log::info('Points added to member via callback', [
-                            'pelanggan_id' => $pelanggan->pelanggan_id,
-                            'points_added' => $pointsAdded,
-                            'transaction_id' => $transaksi->transaksi_id
-                        ]);
-                    }
+                    // Points will be added automatically by observer when status changes to 'paid'
                     break;
 
                 case 'pending':

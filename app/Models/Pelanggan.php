@@ -89,32 +89,8 @@ class Pelanggan extends Authenticatable
         }
     }
 
-    public function addPoints($amount)
-    {
-        try {
-            // Setiap 500000 rupiah dapat 3 point
-            $points = floor($amount / 500000) * 5;
-
-            if ($points > 0) {
-                $this->increment('points', $points);
-
-                Log::info('Points added to member', [
-                    'pelanggan_id' => $this->pelanggan_id,
-                    'amount' => $amount,
-                    'points_added' => $points,
-                    'total_points' => $this->points + $points
-                ]);
-            }
-
-            return $points;
-        } catch (\Exception $e) {
-            Log::error('Error adding points: ' . $e->getMessage(), [
-                'pelanggan_id' => $this->pelanggan_id,
-                'amount' => $amount
-            ]);
-            return 0;
-        }
-    }
+    // Points are now handled automatically by TransaksiObserver
+    // when transaction status changes to 'paid'
 
     public function getAuthIdentifierName()
     {

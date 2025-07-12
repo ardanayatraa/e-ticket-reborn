@@ -33,6 +33,17 @@ class PelangganTable extends DataTableComponent
             Column::make("Nomor WhatsApp", "nomor_whatsapp")
                 ->sortable(),
 
+            Column::make("Status Member", "is_member")
+                ->sortable()
+                ->format(
+                    fn($value, $row) => view('components.member-status', [
+                        'isMember' => $row->is_member,
+                        'points' => $row->points,
+                        'memberSince' => $row->member_since
+                    ])->render()
+                )
+                ->html(),
+
             Column::make('Actions')
                 ->label(fn($row) => view('components.table-action', [
                     'rowId'     => $row->pelanggan_id,

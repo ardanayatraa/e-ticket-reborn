@@ -200,15 +200,7 @@ class TransaksiController extends Controller
             Exclude::create($excludeData);
         }
 
-        // 7. ADD POINTS FOR MEMBER
-        $pelanggan = $transaksi->pelanggan;
-        if ($pelanggan && $pelanggan->is_member) {
-            $pointsAdded = $pelanggan->addPoints($deposit);
-
-            if ($pointsAdded > 0) {
-                session()->flash('points_added', "Selamat! Anda mendapat {$pointsAdded} poin dari transaksi ini.");
-            }
-        }
+        // 7. POINTS WILL BE ADDED AUTOMATICALLY BY OBSERVER WHEN STATUS CHANGES TO 'paid'
 
         // 8. (Optional) Kirim tiket
         SendTicketJob::dispatch($transaksi);

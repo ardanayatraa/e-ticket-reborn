@@ -6,6 +6,7 @@ use App\Mail\SendTicket;
 use App\Models\Ketersediaan;
 use App\Models\Mobil;
 use App\Models\Transaksi;
+use App\Models\PointSetting;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -56,17 +57,44 @@ class TransaksiObserver
             if ($transaksi->pelanggan && $transaksi->pelanggan->is_member) {
                 $pelanggan = $transaksi->pelanggan;
 
-                $poinTambahan = floor($transaksi->total_transaksi / 500000) * 5;
+                // Hitung poin berdasarkan harga ASLI (sebelum diskon poin)
+                $hargaAsli = $transaksi->total_transaksi;
+                
+                // Jika ada diskon poin, tambahkan kembali ke harga asli
+                if ($transaksi->note && strpos($transaksi->note, 'Menggunakan') !== false) {
+                    preg_match('/diskon Rp ([0-9,]+)/', $transaksi->note, $matches);
+                    if (isset($matches[1])) {
+                        $diskon = (int) str_replace(',', '', $matches[1]);
+                        $hargaAsli += $diskon;
+                    }
+                }
 
-                $pelanggan->update([
-                    'points' => $pelanggan->point + $poinTambahan,
-                ]);
+                // Ambil pengaturan poin dari database
+                $pointsPerTransaction = (int) PointSetting::getValue('points_per_transaction', 500000);
+                $pointsEarnedPerTransaction = (int) PointSetting::getValue('points_earned_per_transaction', 5);
+                
+                $poinTambahan = floor($hargaAsli / $pointsPerTransaction) * $pointsEarnedPerTransaction;
 
-                Log::info('Poin pelanggan ditambahkan', [
-                    'pelanggan_id' => $pelanggan->pelanggan_id,
-                    'poin_ditambah' => $poinTambahan,
-                    'poin_total_baru' => $pelanggan->point + $poinTambahan,
-                ]);
+                if ($poinTambahan > 0) {
+                    $pelanggan->update([
+                        'points' => $pelanggan->points + $poinTambahan,
+                    ]);
+
+                    Log::info('Poin pelanggan ditambahkan', [
+                        'pelanggan_id' => $pelanggan->pelanggan_id,
+                        'nama_pelanggan' => $pelanggan->nama_pemesan,
+                        'transaksi_id' => $transaksi->transaksi_id,
+                        'total_transaksi' => $transaksi->total_transaksi,
+                        'harga_asli' => $hargaAsli,
+                        'poin_ditambah' => $poinTambahan,
+                        'poin_total_baru' => $pelanggan->points + $poinTambahan,
+                    ]);
+
+                    // Flash message untuk notifikasi (jika dalam context web request)
+                    if (request()->hasSession()) {
+                        session()->flash('points_added', "Selamat! Anda mendapat {$poinTambahan} poin dari transaksi ini.");
+                    }
+                }
             }
 
             // Kirim tiket via email (jika aktif)

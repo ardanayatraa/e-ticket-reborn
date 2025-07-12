@@ -61,6 +61,12 @@ Route::middleware([
         ->name('transaksi.confirm');
     Route::get('/laporan', [TransaksiController::class, 'laporan'])
         ->name('laporan');
+    
+    // Point Settings Routes
+    Route::get('/point-settings', [App\Http\Controllers\PointSettingsController::class, 'index'])
+        ->name('point-settings.index');
+    Route::put('/point-settings', [App\Http\Controllers\PointSettingsController::class, 'update'])
+        ->name('point-settings.update');
 });
 
 // Pelanggan Authentication Routes
@@ -76,8 +82,6 @@ Route::prefix('pelanggan')->group(function () {
 Route::middleware('auth:pelanggan')->group(function () {
     Route::post('/pelanggan/profile/update', [PelangganController::class, 'updateProfile'])
         ->name('pelanggan.profile.update');
-    Route::post('/pelanggan/redeem-points', [PelangganController::class, 'redeemPoints'])
-        ->name('pelanggan.redeem.points');
 });
 
 
