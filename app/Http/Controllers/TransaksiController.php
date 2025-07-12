@@ -208,7 +208,7 @@ class TransaksiController extends Controller
         // 9. Redirect dengan pesan sukses
         return redirect()
             ->route('transaksi.index')
-            ->with('success', 'Transaksi berhasil diupdate.');
+            ->with('success', 'Transaksi berhasil diupdate. Data akan muncul di laporan.');
     }
 
     /**

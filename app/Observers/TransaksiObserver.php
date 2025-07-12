@@ -110,5 +110,10 @@ class TransaksiObserver
                 'total_profit'          => $transaksi->deposit - $transaksi->pay_to_provider + $transaksi->owe_to_me,
             ]);
         }
+
+        // Broadcast event untuk refresh laporan real-time
+        if (request()->hasSession()) {
+            session()->flash('transaksi_updated', true);
+        }
     }
 }

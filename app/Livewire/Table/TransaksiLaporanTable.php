@@ -16,7 +16,14 @@ class TransaksiLaporanTable extends DataTableComponent
 
     protected $listeners = [
         'refreshTable' => '$refresh',
+        'echo:transaksi-updated' => '$refresh',
     ];
+
+    // Polling untuk update otomatis setiap 30 detik
+    public function getPollingIntervalProperty()
+    {
+        return 30000; // 30 detik
+    }
 
     public function configure(): void
     {
@@ -26,7 +33,8 @@ class TransaksiLaporanTable extends DataTableComponent
     public function builder(): Builder
     {
         return Transaksi::with(['paketWisata', 'pelanggan', 'pemesanan.mobil'])
-            ->where('transaksi_status', 'paid');
+            ->whereIn('transaksi_status', ['paid', 'confirmed'])
+            ->orderBy('updated_at', 'desc');
     }
 
     public function columns(): array
@@ -95,9 +103,19 @@ class TransaksiLaporanTable extends DataTableComponent
                 ->format(fn($v) => number_format($v, 0, ',', '.'))
                 ->footer(fn($rows) => 'Total: Rp ' . number_format($rows->sum('total_transaksi'), 0, ',', '.')),
 
-            Column::make("Status", "transaksi_status")->sortable(),
+            Column::make("Status", "transaksi_status")
+                ->sortable()
+                ->format(function ($value, $row) {
+                    $statusClass = $value === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                    return "<span class='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {$statusClass}'>" . strtoupper($value) . "</span>";
+                })
+                ->html(),
 
             Column::make("Dibuat pada", "created_at")
+                ->sortable()
+                ->format(fn($v) => \Carbon\Carbon::parse($v)->format('Y-m-d H:i:s')),
+
+            Column::make("Diupdate pada", "updated_at")
                 ->sortable()
                 ->format(fn($v) => \Carbon\Carbon::parse($v)->format('Y-m-d H:i:s')),
         ];
@@ -106,11 +124,17 @@ class TransaksiLaporanTable extends DataTableComponent
     public function filters(): array
     {
         return [
-            FiltersDateFilter::make('Dari')
+            FiltersDateFilter::make('Dari (Created)')
                 ->filter(fn(Builder $query, string $value) => $query->whereDate('created_at', '>=', $value)),
 
-            FiltersDateFilter::make('Sampai')
+            FiltersDateFilter::make('Sampai (Created)')
                 ->filter(fn(Builder $query, string $value) => $query->whereDate('created_at', '<=', $value)),
+
+            FiltersDateFilter::make('Dari (Updated)')
+                ->filter(fn(Builder $query, string $value) => $query->whereDate('updated_at', '>=', $value)),
+
+            FiltersDateFilter::make('Sampai (Updated)')
+                ->filter(fn(Builder $query, string $value) => $query->whereDate('updated_at', '<=', $value)),
         ];
     }
 
@@ -143,7 +167,22 @@ class TransaksiLaporanTable extends DataTableComponent
         if (!$trx) return;
 
         $trx->update([$field => $value]);
+        
+        // Refresh table dan emit event untuk update real-time
         $this->dispatch('refreshTable');
-        session()->flash('message', ucfirst(str_replace('_', ' ', $field)) . " updated to {$value}");
+        $this->dispatch('$refresh');
+        
+        // Notifikasi dengan detail transaksi
+        $transaksiInfo = "Transaksi #{$trx->transaksi_id} - " . optional($trx->pelanggan)->nama_pemesan;
+        session()->flash('message', "Status {$field} untuk {$transaksiInfo} berhasil diupdate menjadi {$value}");
+        
+        // Log untuk audit
+        \Log::info('Status transaksi diupdate', [
+            'transaksi_id' => $trx->transaksi_id,
+            'field' => $field,
+            'old_value' => $trx->getOriginal($field),
+            'new_value' => $value,
+            'updated_at' => now()
+        ]);
     }
 }
