@@ -24,7 +24,14 @@ class Pelanggan extends Authenticatable
         'points',
         'member_since',
         'password',
-        'email_verified_at'
+        'email_verified_at',
+        // Kolom member payment
+        'order_id',
+        'amount',
+        'payment_status',
+        'payment_type',
+        'transaction_id',
+        'midtrans_response',
     ];
 
     protected $hidden = [
@@ -36,6 +43,8 @@ class Pelanggan extends Authenticatable
         'email_verified_at' => 'datetime',
         'member_since' => 'datetime',
         'is_member' => 'boolean',
+        'midtrans_response' => 'array',
+        'amount' => 'decimal:2',
     ];
 
     // Relasi
@@ -47,11 +56,6 @@ class Pelanggan extends Authenticatable
     public function transaksis()
     {
         return $this->hasMany(Transaksi::class, 'pemesan_id');
-    }
-
-    public function memberPayments()
-    {
-        return $this->hasMany(MemberPayment::class, 'pelanggan_id');
     }
 
     // Methods untuk member

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MemberPayment;
 use App\Models\Pelanggan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,20 +24,18 @@ class MemberController extends Controller
         }
 
         // Cek apakah ada pembayaran pending
-        $pendingPayment = MemberPayment::where('pelanggan_id', $pelanggan->pelanggan_id)
-            ->where('payment_status', 'pending')
-            ->first();
-
-        if ($pendingPayment) {
-            $orderId = $pendingPayment->order_id;
+        if ($pelanggan->payment_status === 'pending' && $pelanggan->order_id) {
+            $orderId = $pelanggan->order_id;
         } else {
             // Buat order baru
             $orderId = 'MEMBER-' . $pelanggan->pelanggan_id . '-' . time();
-
-            MemberPayment::create([
-                'pelanggan_id' => $pelanggan->pelanggan_id,
+            $pelanggan->update([
                 'order_id' => $orderId,
-                'amount' => 25000
+                'amount' => 25000,
+                'payment_status' => 'pending',
+                'payment_type' => null,
+                'transaction_id' => null,
+                'midtrans_response' => null,
             ]);
         }
 
@@ -84,7 +81,6 @@ class MemberController extends Controller
 
     public function callback(Request $request)
     {
-        dd($request->all());
         // Setup Midtrans config
         \Midtrans\Config::$serverKey = config('midtrans.server_key');
         \Midtrans\Config::$isProduction = config('midtrans.is_production');
@@ -109,10 +105,10 @@ class MemberController extends Controller
                 'gross_amount' => $grossAmount
             ]);
 
-            // Find member payment record
-            $memberPayment = MemberPayment::where('order_id', $orderId)->first();
+            // Find pelanggan by order_id
+            $pelanggan = Pelanggan::where('order_id', $orderId)->first();
 
-            if (!$memberPayment) {
+            if (!$pelanggan) {
                 Log::error('Member payment not found for order_id: ' . $orderId);
                 return response()->json(['status' => 'error', 'message' => 'Payment record not found'], 404);
             }
@@ -121,7 +117,7 @@ class MemberController extends Controller
             if ($transactionStatus == 'capture') {
                 if ($fraudStatus == 'challenge') {
                     // Payment is challenged, wait for manual review
-                    $memberPayment->update([
+                    $pelanggan->update([
                         'payment_status' => 'challenge',
                         'payment_type' => $paymentType,
                         'transaction_id' => $transactionId,
@@ -131,7 +127,7 @@ class MemberController extends Controller
                     Log::info('Member payment challenged: ' . $orderId);
                 } else if ($fraudStatus == 'accept') {
                     // Payment successful
-                    $memberPayment->update([
+                    $pelanggan->update([
                         'payment_status' => 'success',
                         'payment_type' => $paymentType,
                         'transaction_id' => $transactionId,
@@ -139,14 +135,13 @@ class MemberController extends Controller
                     ]);
 
                     // Upgrade to member
-                    $pelanggan = $memberPayment->pelanggan;
                     $pelanggan->becomeMember();
 
                     Log::info('Member upgrade successful for pelanggan_id: ' . $pelanggan->pelanggan_id);
                 }
             } else if ($transactionStatus == 'settlement') {
                 // Payment settled (for bank transfer, etc.)
-                $memberPayment->update([
+                $pelanggan->update([
                     'payment_status' => 'success',
                     'payment_type' => $paymentType,
                     'transaction_id' => $transactionId,
@@ -154,13 +149,12 @@ class MemberController extends Controller
                 ]);
 
                 // Upgrade to member
-                $pelanggan = $memberPayment->pelanggan;
                 $pelanggan->becomeMember();
 
                 Log::info('Member upgrade successful (settlement) for pelanggan_id: ' . $pelanggan->pelanggan_id);
             } else if ($transactionStatus == 'pending') {
                 // Payment pending
-                $memberPayment->update([
+                $pelanggan->update([
                     'payment_status' => 'pending',
                     'payment_type' => $paymentType,
                     'transaction_id' => $transactionId,
@@ -170,7 +164,7 @@ class MemberController extends Controller
                 Log::info('Member payment pending: ' . $orderId);
             } else if ($transactionStatus == 'deny') {
                 // Payment denied
-                $memberPayment->update([
+                $pelanggan->update([
                     'payment_status' => 'failed',
                     'payment_type' => $paymentType,
                     'transaction_id' => $transactionId,
@@ -180,7 +174,7 @@ class MemberController extends Controller
                 Log::info('Member payment denied: ' . $orderId);
             } else if ($transactionStatus == 'expire') {
                 // Payment expired
-                $memberPayment->update([
+                $pelanggan->update([
                     'payment_status' => 'expired',
                     'payment_type' => $paymentType,
                     'transaction_id' => $transactionId,
@@ -190,7 +184,7 @@ class MemberController extends Controller
                 Log::info('Member payment expired: ' . $orderId);
             } else if ($transactionStatus == 'cancel') {
                 // Payment cancelled
-                $memberPayment->update([
+                $pelanggan->update([
                     'payment_status' => 'cancelled',
                     'payment_type' => $paymentType,
                     'transaction_id' => $transactionId,
@@ -200,17 +194,10 @@ class MemberController extends Controller
                 Log::info('Member payment cancelled: ' . $orderId);
             }
 
-            return response()->json(['status' => 'success']);
-
+            return response()->json(['status' => 'ok']);
         } catch (\Exception $e) {
-            Log::error('Member Payment Callback Error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ], 500);
+            Log::error('Midtrans Callback Error: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 
@@ -224,21 +211,20 @@ class MemberController extends Controller
         return response()->json(['message' => 'Order ID tidak ditemukan'], 400);
     }
 
-    $memberPayment = MemberPayment::where('order_id', $orderId)->first();
+    $pelanggan = Pelanggan::where('order_id', $orderId)->first();
 
-    if (!$memberPayment) {
+    if (!$pelanggan) {
         return response()->json(['message' => 'Pembayaran tidak ditemukan'], 404);
     }
 
     // Update payment dan upgrade member
-    $memberPayment->update([
+    $pelanggan->update([
         'payment_status' => 'success',
         'payment_type' => $result['payment_type'] ?? 'unknown',
         'transaction_id' => $result['transaction_id'] ?? '',
         'midtrans_response' => json_encode($result)
     ]);
 
-    $pelanggan = Auth::guard('pelanggan')->user();
     $pelanggan->becomeMember();
 
     return response()->json(['message' => 'Berhasil di-upgrade menjadi member']);
