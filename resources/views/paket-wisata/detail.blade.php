@@ -287,27 +287,32 @@
             /* Add minimum padding for mobile */
             padding-top: 2rem;
             padding-bottom: 2rem;
-            z-index: 50; /* Default z-index untuk modal biasa */
+            z-index: 50;
+            /* Default z-index untuk modal biasa */
         }
 
         /* Modal Login dan Register - Lapisan Paling Depan */
         #modalLogin,
         #modalRegister {
-            z-index: 9999 !important; /* Z-index tertinggi untuk login/register */
+            z-index: 9999 !important;
+            /* Z-index tertinggi untuk login/register */
         }
 
         /* Backdrop khusus untuk login/register */
         #modalLogin .modal-overlay,
         #modalRegister .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.75) !important; /* Backdrop lebih gelap */
-            backdrop-filter: blur(12px) !important; /* Blur lebih kuat */
+            background-color: rgba(0, 0, 0, 0.75) !important;
+            /* Backdrop lebih gelap */
+            backdrop-filter: blur(12px) !important;
+            /* Blur lebih kuat */
         }
 
         .modal-content {
             animation: modalSlideIn 0.3s ease-out;
             /* Ensure modal can shrink on small screens */
             width: 100%;
-            max-width: 28rem; /* max-w-md equivalent */
+            max-width: 28rem;
+            /* max-w-md equivalent */
             /* Allow content to determine height */
             max-height: calc(100vh - 4rem);
             /* Make modal content scrollable if needed */
@@ -318,11 +323,13 @@
 
         /* For larger modals */
         .modal-content-large {
-            max-width: 72rem; /* max-w-6xl equivalent */
+            max-width: 72rem;
+            /* max-w-6xl equivalent */
         }
 
         .modal-content-xl {
-            max-width: 80rem; /* max-w-5xl equivalent */
+            max-width: 80rem;
+            /* max-w-5xl equivalent */
         }
 
         @keyframes modalSlideIn {
@@ -574,17 +581,17 @@
         </div>
     </nav>
 
-   <!-- Main Content -->
+    <!-- Main Content -->
     <main class="pt-20">
         <!-- Hero Section -->
         <section class="relative h-96 md:h-[500px] overflow-hidden">
-            <img src="{{ $paket->foto ? asset('storage/' . $paket->foto) : 'https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1170&q=80' }}" 
-                 alt="{{ $paket->judul }}" 
-                 class="w-full h-full object-cover">
+            <img src="{{ $paket->foto ? asset('storage/' . $paket->foto) : 'https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1170&q=80' }}"
+                alt="{{ $paket->judul }}" class="w-full h-full object-cover">
             <div class="absolute inset-0 bg-black bg-opacity-40"></div>
             <div class="absolute inset-0 flex items-center justify-center">
                 <div class="text-center text-white px-4">
-                    <h1 class="text-3xl md:text-5xl font-bold mb-4" data-package-name="{{ $paket->judul }}">{{ $paket->judul }}</h1>
+                    <h1 class="text-3xl md:text-5xl font-bold mb-4" data-package-name="{{ $paket->judul }}">
+                        {{ $paket->judul }}</h1>
                     <p class="text-lg md:text-xl opacity-90">{{ $paket->tempat }}</p>
                 </div>
             </div>
@@ -599,102 +606,109 @@
                         <!-- Description -->
                         <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
                             <h2 class="text-2xl font-bold text-gray-800 mb-4">Deskripsi Paket</h2>
-                  <p class="text-gray-600 leading-relaxed">{!! nl2br(e($paket->deskripsi)) !!}</p>
+                            <p class="text-gray-600 leading-relaxed">{!! nl2br(e($paket->deskripsi)) !!}</p>
 
                         </div>
 
-               @if ($paket->gallery && count($paket->gallery) > 0)
-    <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-            <i class="fas fa-images text-teal-600 mr-3"></i>
-            Gallery Foto
-        </h2>
+                        @if ($paket->gallery && count($paket->gallery) > 0)
+                            <div class="bg-white rounded-2xl shadow-lg p-6 md:p-8">
+                                <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                                    <i class="fas fa-images text-teal-600 mr-3"></i>
+                                    Gallery Foto
+                                </h2>
 
-        <!-- Gallery Grid -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            @foreach ($paket->gallery as $index => $image)
-                <div>
-                    <img src="{{ asset('storage/' . $image) }}"
-                         alt="Gallery {{ $index + 1 }}"
-                         class="w-full h-48 object-cover rounded-lg cursor-pointer hover:scale-105 transition"
-                         onclick="openImageModal('{{ asset('storage/' . $image) }}')">
-                </div>
-            @endforeach
-        </div>
-    </div>
+                                <!-- Gallery Grid -->
+                                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                    @foreach ($paket->gallery as $index => $image)
+                                        <div>
+                                            <img src="{{ asset('storage/' . $image) }}"
+                                                alt="Gallery {{ $index + 1 }}"
+                                                class="w-full h-48 object-cover rounded-lg cursor-pointer hover:scale-105 transition"
+                                                onclick="openImageModal('{{ asset('storage/' . $image) }}')">
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
 
-    <!-- Modal for Enlarged Image -->
-    <div id="imageModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 hidden">
-        <div class="relative">
-            <button onclick="closeImageModal()" class="absolute top-2 right-2 text-white text-3xl font-bold z-10">&times;</button>
-            <img id="modalImage" src="" alt="Full Image" class="max-h-[80vh] max-w-[90vw] rounded-lg shadow-xl">
-        </div>
-    </div>
-@endif
+                            <!-- Modal for Enlarged Image -->
+                            <div id="imageModal"
+                                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 hidden">
+                                <div class="relative">
+                                    <button onclick="closeImageModal()"
+                                        class="absolute top-2 right-2 text-white text-3xl font-bold z-10">&times;</button>
+                                    <img id="modalImage" src="" alt="Full Image"
+                                        class="max-h-[80vh] max-w-[90vw] rounded-lg shadow-xl">
+                                </div>
+                            </div>
+                        @endif
 
-                <!-- Include & Exclude Section -->
-                <div class="grid grid-cols-1 mt-12 md:grid-cols-2 gap-6">
-                    <!-- Included -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6 detail-card">
-                        <h3 class="text-xl font-bold text-green-700 mb-6 flex items-center">
-                            <i class="fas fa-check-circle text-green-600 mr-3"></i>
-                            Yang Termasuk
-                        </h3>
-                        <div class="space-y-4">
-                            @php
-                                $includeItems = [
-                                    'bensin' => ['label' => 'Bensin', 'icon' => '⛽'],
-                                    'parkir' => ['label' => 'Parkir', 'icon' => '🅿️'],
-                                    'sopir' => ['label' => 'Sopir', 'icon' => '👨‍✈️'],
-                                    'makan_siang' => ['label' => 'Makan Siang', 'icon' => '🍽️'],
-                                    'makan_malam' => ['label' => 'Makan Malam', 'icon' => '🍽️'],
-                                    'tiket_masuk' => ['label' => 'Tiket Masuk', 'icon' => '🎫'],
-                                ];
-                                $hasInclude = false;
-                            @endphp
-                            @foreach ($includeItems as $field => $data)
-                                @if ($paket->include && $paket->include->$field)
-                                    @php $hasInclude = true; @endphp
-                                    <div class="flex items-center text-green-700 bg-green-50 p-3 rounded-lg">
-                                        <span class="text-2xl mr-3">{{ $data['icon'] }}</span>
-                                        <span class="font-medium">{{ $data['label'] }}</span>
-                                    </div>
-                                @endif
-                            @endforeach
-                            @if (!$hasInclude)
-                                <p class="text-gray-500 italic text-center py-4">Tidak ada fasilitas yang termasuk dalam paket ini</p>
-                            @endif
+                        <!-- Include & Exclude Section -->
+                        <div class="grid grid-cols-1 mt-12 md:grid-cols-2 gap-6">
+                            <!-- Included -->
+                            <div class="bg-white rounded-2xl shadow-lg p-6 detail-card">
+                                <h3 class="text-xl font-bold text-green-700 mb-6 flex items-center">
+                                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                                    Yang Termasuk
+                                </h3>
+                                <div class="space-y-4">
+                                    @php
+                                        $includeItems = [
+                                            'bensin' => ['label' => 'Bensin', 'icon' => '⛽'],
+                                            'parkir' => ['label' => 'Parkir', 'icon' => '🅿️'],
+                                            'sopir' => ['label' => 'Sopir', 'icon' => '👨‍✈️'],
+                                            'makan_siang' => ['label' => 'Makan Siang', 'icon' => '🍽️'],
+                                            'makan_malam' => ['label' => 'Makan Malam', 'icon' => '🍽️'],
+                                            'tiket_masuk' => ['label' => 'Tiket Masuk', 'icon' => '🎫'],
+                                        ];
+                                        $hasInclude = false;
+                                    @endphp
+                                    @foreach ($includeItems as $field => $data)
+                                        @if ($paket->include && $paket->include->$field)
+                                            @php $hasInclude = true; @endphp
+                                            <div class="flex items-center text-green-700 bg-green-50 p-3 rounded-lg">
+                                                <span class="text-2xl mr-3">{{ $data['icon'] }}</span>
+                                                <span class="font-medium">{{ $data['label'] }}</span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                    @if (!$hasInclude)
+                                        <p class="text-gray-500 italic text-center py-4">Tidak ada fasilitas yang
+                                            termasuk dalam paket ini</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <!-- Excluded -->
+                            <div class="bg-white rounded-2xl shadow-lg p-6 detail-card">
+                                <h3 class="text-xl font-bold text-red-700 mb-6 flex items-center">
+                                    <i class="fas fa-times-circle text-red-600 mr-3"></i>
+                                    Yang Tidak Termasuk
+                                </h3>
+                                <div class="space-y-4">
+                                    @php $hasExclude = false; @endphp
+                                    @foreach ($includeItems as $field => $data)
+                                        @if ($paket->exclude && $paket->exclude->$field)
+                                            @php $hasExclude = true; @endphp
+                                            <div class="flex items-center text-red-700 bg-red-50 p-3 rounded-lg">
+                                                <span class="text-2xl mr-3">{{ $data['icon'] }}</span>
+                                                <span class="font-medium">{{ $data['label'] }}</span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                    @if (!$hasExclude)
+                                        <p class="text-gray-500 italic text-center py-4">Semua fasilitas termasuk dalam
+                                            paket ini</p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <!-- Excluded -->
-                    <div class="bg-white rounded-2xl shadow-lg p-6 detail-card">
-                        <h3 class="text-xl font-bold text-red-700 mb-6 flex items-center">
-                            <i class="fas fa-times-circle text-red-600 mr-3"></i>
-                            Yang Tidak Termasuk
-                        </h3>
-                        <div class="space-y-4">
-                            @php $hasExclude = false; @endphp
-                            @foreach ($includeItems as $field => $data)
-                                @if ($paket->exclude && $paket->exclude->$field)
-                                    @php $hasExclude = true; @endphp
-                                    <div class="flex items-center text-red-700 bg-red-50 p-3 rounded-lg">
-                                        <span class="text-2xl mr-3">{{ $data['icon'] }}</span>
-                                        <span class="font-medium">{{ $data['label'] }}</span>
-                                    </div>
-                                @endif
-                            @endforeach
-                            @if (!$hasExclude)
-                                <p class="text-gray-500 italic text-center py-4">Semua fasilitas termasuk dalam paket ini</p>
-                            @endif
-                        </div>
-                    </div>
-                </div>
                     </div>
 
                     <!-- Sidebar -->
                     <div class="lg:col-span-1">
                         <!-- Booking Card -->
-                        <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24" data-package-id="{{ $paket->paketwisata_id }}" data-package-price="{{ $paket->harga }}" data-package-image="{{ $paket->foto ? asset('storage/' . $paket->foto) : '' }}">
+                        <div class="bg-white rounded-xl shadow-lg p-6 sticky top-24"
+                            data-package-id="{{ $paket->paketwisata_id }}" data-package-price="{{ $paket->harga }}"
+                            data-package-image="{{ $paket->foto ? asset('storage/' . $paket->foto) : '' }}">
                             <div class="text-center mb-6">
                                 <div class="text-sm text-gray-500 uppercase font-medium mb-2">Harga Mulai</div>
                                 <div class="text-3xl font-bold text-teal-600 mb-1">
@@ -718,23 +732,23 @@
                                 </div>
                             </div>
 
-                 
-                            
-                            
-                             @auth('pelanggan')
-                                        <button
-                                            onclick="bukaStep1({{ $paket->paketwisata_id }}, '{{ addslashes($paket->judul) }}', {{ $paket->harga }}, '{{ $paket->foto }}')"
-                                            class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-4">
-                                            <i class="fas fa-calendar-check mr-1"></i> Pesan
-                                        </button>
-                                    @else
-                                        <button onclick="bukaModalLogin()"
-                                            class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-4">
-                                            <i class="fas fa-sign-in-alt mr-1"></i> Login untuk Pesan
-                                        </button>
-                                    @endauth
 
-                            <button onclick="sharePackage()" 
+
+
+                            @auth('pelanggan')
+                                <button
+                                    onclick="bukaStep1({{ $paket->paketwisata_id }}, '{{ addslashes($paket->judul) }}', {{ $paket->harga }}, '{{ $paket->foto }}')"
+                                    class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-4">
+                                    <i class="fas fa-calendar-check mr-1"></i> Pesan
+                                </button>
+                            @else
+                                <button onclick="bukaModalLogin()"
+                                    class="w-full bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-4">
+                                    <i class="fas fa-sign-in-alt mr-1"></i> Login untuk Pesan
+                                </button>
+                            @endauth
+
+                            <button onclick="sharePackage()"
                                 class="w-full bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-lg hover:bg-gray-200 transition-all duration-200">
                                 <i class="fas fa-share-alt mr-2"></i>
                                 Bagikan Paket
@@ -1201,7 +1215,8 @@
 
     <!-- Booking Modal (Enhanced) -->
     <div id="kontainerPicker" class="hidden modal-overlay overflow-y-auto">
-        <div class="modal-content modal-content-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl my-4 sm:my-8 mx-3 sm:mx-auto animate-fadeIn">
+        <div
+            class="modal-content modal-content-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl my-4 sm:my-8 mx-3 sm:mx-auto animate-fadeIn">
             {{-- STEP 1 --}}
             <div id="step1" class="modal-body p-4 sm:p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -1273,9 +1288,9 @@
                     <div class="w-full lg:w-1/2">
                         <div class="flex justify-between items-center mb-3">
                             <h5 class="font-medium text-gray-700 text-base sm:text-lg">Mobil
-</cut_off_point>
+                                </cut_off_point>
 
-Tersedia</h5>
+                                Tersedia</h5>
                             <button id="tombolResetPilihan" onclick="resetPilihanMobil()"
                                 class="hidden text-sm text-red-600 hover:text-red-800 font-medium">
                                 <i class="fas fa-undo mr-1"></i> Reset Pilihan
@@ -1399,15 +1414,21 @@ Tersedia</h5>
 
                                             <div id="pointsInputSection" class="hidden">
                                                 <div class="flex items-center space-x-2">
-                                                    <input type="number" id="pointsToUse" min="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
+                                                    <input type="number" id="pointsToUse"
+                                                        min="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
                                                         max="{{ Auth::guard('pelanggan')->user()->points }}"
-                                                        step="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}" placeholder="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
+                                                        step="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
+                                                        placeholder="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
                                                         onchange="calculatePointsDiscount()"
                                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
                                                     <span class="text-sm text-gray-600">poin</span>
                                                 </div>
                                                 <p class="text-xs text-gray-500 mt-1">
-                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }} poin = Rp {{ number_format(\App\Models\PointSetting::getValue('discount_per_points', 10000), 0, ',', '.') }} potongan (kelipatan {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }})
+                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}
+                                                    poin = Rp
+                                                    {{ number_format(\App\Models\PointSetting::getValue('discount_per_points', 10000), 0, ',', '.') }}
+                                                    potongan (kelipatan
+                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }})
                                                 </p>
                                                 <div id="pointsDiscountPreview"
                                                     class="hidden mt-2 text-sm font-medium text-green-600">
@@ -1466,12 +1487,13 @@ Tersedia</h5>
                                 </div>
                                 <div id="alamatInputSection" class="hidden">
                                     <label class="block text-gray-700 font-medium mb-2 text-sm">Alamat Baru</label>
-                                    <textarea id="alamatBaru" name="alamat_baru" rows="3" 
+                                    <textarea id="alamatBaru" name="alamat_baru" rows="3"
                                         placeholder="Masukkan alamat lengkap untuk penjemputan..."
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none"></textarea>
                                     <p class="text-xs text-gray-500 mt-1">
                                         <i class="fas fa-info-circle mr-1"></i>
-                                        Alamat ini akan digunakan untuk penjemputan pada tanggal {{ date('d M Y', strtotime('+1 day')) }}
+                                        Alamat ini akan digunakan untuk penjemputan pada tanggal
+                                        {{ date('d M Y', strtotime('+1 day')) }}
                                     </p>
                                 </div>
                             </div>
@@ -1858,7 +1880,8 @@ Tersedia</h5>
                 pointsInputSection.classList.remove('hidden');
                 pointsSection.classList.add('points-active');
                 // Set default value
-                document.getElementById('pointsToUse').value = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
+                document.getElementById('pointsToUse').value =
+                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
                 calculatePointsDiscount();
             } else {
                 pointsInputSection.classList.add('hidden');
@@ -1906,7 +1929,8 @@ Tersedia</h5>
                 input.value = maxCapacity;
                 input.classList.add('border-red-500');
                 errorElement.classList.remove('hidden');
-                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Maksimal ' + maxCapacity + ' peserta';
+                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Maksimal ' + maxCapacity +
+                    ' peserta';
                 tombolKonfirmasi.disabled = true;
                 return false;
             }
@@ -1914,7 +1938,7 @@ Tersedia</h5>
             // Input valid
             input.classList.remove('border-red-500');
             errorElement.classList.add('hidden');
-            
+
             // Cek apakah semua input valid
             const allInputs = document.querySelectorAll('.participant-input');
             let allValid = true;
@@ -1942,9 +1966,10 @@ Tersedia</h5>
 
             const pointsForDiscount = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
             const discountPerPoints = {{ \App\Models\PointSetting::getValue('discount_per_points', 10000) }};
-            
+
             if (pointsToUse % pointsForDiscount !== 0) {
-                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / pointsForDiscount) * pointsForDiscount;
+                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / pointsForDiscount) *
+                    pointsForDiscount;
                 return calculatePointsDiscount();
             }
 
@@ -2156,7 +2181,7 @@ Tersedia</h5>
             // Validasi kapasitas mobil sebelum submit
             const allInputs = document.querySelectorAll('.participant-input');
             let validationError = false;
-            
+
             allInputs.forEach(input => {
                 const value = parseInt(input.value);
                 const maxCap = parseInt(input.dataset.maxCapacity);
@@ -2195,7 +2220,7 @@ Tersedia</h5>
             formData.append('tanggal', terpilih.tanggal);
             formData.append('jam_mulai', terpilih.waktu);
             formData.append('points_used', terpilih.pointsUsed);
-            
+
             // Add address data
             const updateAlamat = document.getElementById('updateAlamat').checked;
             formData.append('update_alamat', updateAlamat.toString());
@@ -2299,7 +2324,7 @@ Tersedia</h5>
 
                                     // Tampilkan modal dengan pesan hold
                                     document.getElementById('pesanSukses').textContent =
-                                        "Booking berhasil dibuat dan akan di-hold selama 4 jam. Silakan lakukan pembayaran di kantor kami.";
+                                        "Booking berhasil dibuat dan silakan cek email untuk melihat detail E-Ticket.";
                                     document.getElementById('modalKonfirmasi').classList.remove('hidden');
                                 }
                             });
@@ -2636,7 +2661,7 @@ Tersedia</h5>
                     <div class="mb-4">
                         <label class="block text-gray-700 font-medium mb-2 text-sm">Jumlah Peserta</label>
                         <input type="number" name="jumlah_peserta[]" min="1" max="${mobil.kursi}" value="${mobil.kursi}"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm participant-input" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm participant-input"
                             data-mobil-index="${index}" data-max-capacity="${mobil.kursi}" required
                             onchange="validateParticipantCount(this)">
                         <div class="mt-1 text-xs text-gray-500">
@@ -2840,22 +2865,22 @@ Tersedia</h5>
         }
     </script>
     <script>
-    function openImageModal(imageUrl) {
-        document.getElementById('modalImage').src = imageUrl;
-        document.getElementById('imageModal').classList.remove('hidden');
-    }
-
-    function closeImageModal() {
-        document.getElementById('imageModal').classList.add('hidden');
-    }
-
-    // Optional: Tutup modal saat klik di luar gambar
-    document.getElementById('imageModal').addEventListener('click', function (e) {
-        if (e.target.id === 'imageModal') {
-            closeImageModal();
+        function openImageModal(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            document.getElementById('imageModal').classList.remove('hidden');
         }
-    });
-</script>
+
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        // Optional: Tutup modal saat klik di luar gambar
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target.id === 'imageModal') {
+                closeImageModal();
+            }
+        });
+    </script>
 
     @livewireScripts
 </body>
