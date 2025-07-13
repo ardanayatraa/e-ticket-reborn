@@ -39,7 +39,7 @@ class ViewGenerateCommand extends Command
             'include_models',
             'excludes',
             'transaksi',
-            'detailtransaksis',
+
         ];
 
         foreach ($folders as $folder) {

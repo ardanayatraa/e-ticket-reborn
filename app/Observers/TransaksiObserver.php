@@ -13,16 +13,11 @@ use Illuminate\Support\Facades\Mail;
 class TransaksiObserver
 {
     /**
-     * Handle the Transaksi “created” event.
+     * Handle the Transaksi "created" event.
      */
     public function created(Transaksi $transaksi)
     {
-        $transaksi->detailTransaksi()->create([
-            'total_transaksi'       => $transaksi->total_transaksi,
-            'total_owe_to_me'       => $transaksi->owe_to_me,
-            'total_pay_to_provider' => $transaksi->pay_to_provider,
-            'total_profit'          => $transaksi->deposit -  $transaksi->pay_to_provider + $transaksi->owe_to_me,
-        ]);
+        // Tidak perlu update field detail transaksi lagi karena sudah dihitung otomatis via accessor
     }
 
     /**
@@ -99,16 +94,6 @@ class TransaksiObserver
 
             // Kirim tiket via email (jika aktif)
             // Mail::to($transaksi->pelanggan->email)->send(new SendTicket($transaksi));
-        }
-
-        // Update detailTransaksi jika ada
-        if ($transaksi->detailTransaksi) {
-            $transaksi->detailTransaksi()->update([
-                'total_transaksi'       => $transaksi->total_transaksi,
-                'total_owe_to_me'       => $transaksi->owe_to_me,
-                'total_pay_to_provider' => $transaksi->pay_to_provider,
-                'total_profit'          => $transaksi->deposit - $transaksi->pay_to_provider + $transaksi->owe_to_me,
-            ]);
         }
 
         // Broadcast event untuk refresh laporan real-time

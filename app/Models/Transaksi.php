@@ -28,7 +28,7 @@ class Transaksi extends Model
         'note',
         'total_transaksi',
         'transaksi_status',
-        'order_id'
+        'order_id',
     ];
 
     /**
@@ -80,18 +80,6 @@ class Transaksi extends Model
     }
 
     /**
-     * Detail transaksi (jika ada satu detail per transaksi)
-     */
-    public function detailTransaksi()
-    {
-        return $this->hasOne(
-            DetailTransaksi::class,
-            'transaksi_id',
-            'transaksi_id'
-        );
-    }
-
-    /**
      * Ketersediaan yang dibuat saat status 'paid'
      */
     public function ketersediaan()
@@ -119,5 +107,29 @@ class Transaksi extends Model
             'pemesanan_id',  // foreign key di excludes
             'pemesanan_id'   // local key di transaksis
         );
+    }
+
+    /**
+     * Accessor untuk total_owe_to_me (dihitung dari owe_to_me)
+     */
+    public function getTotalOweToMeAttribute()
+    {
+        return $this->owe_to_me;
+    }
+
+    /**
+     * Accessor untuk total_pay_to_provider (dihitung dari pay_to_provider)
+     */
+    public function getTotalPayToProviderAttribute()
+    {
+        return $this->pay_to_provider;
+    }
+
+    /**
+     * Accessor untuk total_profit (dihitung dari deposit - pay_to_provider + owe_to_me)
+     */
+    public function getTotalProfitAttribute()
+    {
+        return $this->deposit - $this->pay_to_provider + $this->owe_to_me;
     }
 }

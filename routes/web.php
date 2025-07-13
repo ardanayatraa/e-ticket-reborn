@@ -10,7 +10,7 @@ use App\Http\Controllers\KetersediaanController;
 use App\Http\Controllers\IncludeModelController;
 use App\Http\Controllers\ExcludeController;
 use App\Http\Controllers\TransaksiController;
-use App\Http\Controllers\DetailTransaksiController;
+
 use App\Http\Controllers\MobilController;
 use App\Http\Controllers\Auth\PelangganAuthController;
 use App\Http\Controllers\MemberController;
