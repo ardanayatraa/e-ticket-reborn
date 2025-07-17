@@ -7,6 +7,7 @@ use App\Models\Mobil;
 use App\Models\PaketWisata;
 use App\Models\IncludeModel;
 use App\Models\Exclude;
+use App\Models\PointSetting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -119,37 +120,40 @@ class PaketWisataController extends Controller
         }
     }
 
-    public function show($slug)
-    {
-        $paket = PaketWisata::where('slug', $slug)
-            ->with(['include', 'exclude'])
-            ->firstOrFail();
-        $mobil = Mobil::all();
+ public function show($slug)
+{
+    $paket = PaketWisata::where('slug', $slug)
+        ->with(['include', 'exclude'])
+        ->firstOrFail();
+    $mobil = Mobil::all();
 
-        // Jika request AJAX, return view detail saja
-        if (request()->ajax()) {
-            return view('paket-wisata.detail-content', compact('paket', 'mobil'));
-        }
+    // Ambil pengaturan poin untuk keuntungan member
+    $pointSettings = PointSetting::all()->keyBy('key');
 
-        // Jika bukan AJAX, return halaman detail lengkap
-        return view('paket-wisata.detail', compact('paket', 'mobil'));
+    // Jika request AJAX, return view detail saja
+    if (request()->ajax()) {
+        return view('paket-wisata.detail-content', compact('paket', 'mobil', 'pointSettings'));
     }
+
+    // Jika bukan AJAX, return halaman detail lengkap
+    return view('paket-wisata.detail', compact('paket', 'mobil', 'pointSettings'));
+}
 
     // PERBAIKAN: Hapus dd(1) dan gunakan parameter yang konsisten
     public function edit($id)
 {
     $paketwisata = PaketWisata::findOrFail($id);
     $paketwisata->load(['include', 'exclude']);
-    
+
     return view('paket-wisata.edit', ['paketwisata' => $paketwisata]);
 }
 
     // PERBAIKAN: Gunakan parameter yang konsisten
     public function update(Request $request, $id)
 {
-    
+
     $paketwisata = PaketWisata::where('slug',$id)->first();
-    
+
     $data = $request->validate([
         'judul'  => 'required|string|max:255',
         'tempat' => 'required|string',
@@ -250,7 +254,7 @@ class PaketWisataController extends Controller
     public function destroy($id)
 {
     $paketwisata = PaketWisata::findOrFail($id);
-    
+
     DB::beginTransaction();
 
     try {
@@ -291,13 +295,17 @@ class PaketWisataController extends Controller
             ->with('error', 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage());
     }
 }
-    public function list()
+      public function list()
     {
         $paket = PaketWisata::with(['include', 'exclude'])
             ->orderBy('created_at', 'desc')
             ->get();
         $mobil = Mobil::all();
-        return view('paket-wisata.landing-page', compact('paket', 'mobil'));
+
+        // Ambil pengaturan poin untuk keuntungan member
+        $pointSettings = PointSetting::all()->keyBy('key');
+
+        return view('paket-wisata.landing-page', compact('paket', 'mobil', 'pointSettings'));
     }
 
     public function check(Request $request)

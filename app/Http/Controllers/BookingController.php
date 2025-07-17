@@ -40,7 +40,42 @@ class BookingController extends Controller
                 'deposit' => $result['gross_amount'] ?? $transaksi->total_transaksi,
             ]);
 
-                SendTicketJob::dispatch($transaksi);
+            // --- SOLUSI: Update semua transaksi terkait booking multiple mobil ---
+            // Ambil info penting
+            $pemesanId = $transaksi->pemesan_id;
+            $paketWisataId = $transaksi->paketwisata_id;
+            $paidDeposit = $transaksi->deposit;
+            $createdAt = $transaksi->created_at;
+
+            // Ambil tanggal keberangkatan dari relasi pemesanan
+            $tanggalKeberangkatan = $transaksi->pemesanan ? $transaksi->pemesanan->tanggal_keberangkatan : null;
+
+            if ($tanggalKeberangkatan) {
+                // Update semua transaksi yang pending, user & paket & tanggal sama, dibuat dalam 1 menit
+                $relatedTransaksi = \App\Models\Transaksi::where('pemesan_id', $pemesanId)
+                    ->where('paketwisata_id', $paketWisataId)
+                    ->where('transaksi_status', 'pending')
+                    ->whereHas('pemesanan', function($q) use ($tanggalKeberangkatan) {
+                        $q->whereDate('tanggal_keberangkatan', $tanggalKeberangkatan);
+                    })
+                    ->whereBetween('created_at', [
+                        $createdAt->copy()->subMinute(),
+                        $createdAt->copy()->addMinute()
+                    ])
+                    ->get();
+
+                foreach ($relatedTransaksi as $trx) {
+                    $trx->update([
+                        'transaksi_status' => 'paid',
+                        'deposit' => $paidDeposit, // atau bisa disesuaikan jika ingin split deposit
+                    ]);
+                    \App\Jobs\SendTicketJob::dispatch($trx);
+                }
+            }
+            // --- END SOLUSI ---
+
+            // Kirim tiket untuk transaksi utama
+            SendTicketJob::dispatch($transaksi);
 
             // Points will be added automatically by observer when status changes to 'paid'
 

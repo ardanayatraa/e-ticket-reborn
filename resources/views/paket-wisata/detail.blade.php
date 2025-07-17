@@ -919,11 +919,15 @@
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-calculator text-blue-600 mr-2"></i>
-                                Setiap Rp 500.000 = 3 poin
+                                Setiap Rp
+                                {{ number_format($pointSettings['points_per_transaction']->value ?? 500000, 0, ',', '.') }}
+                                = {{ $pointSettings['points_earned_per_transaction']->value ?? 5 }} poin
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-tags text-blue-600 mr-2"></i>
-                                10 poin = Rp 10.000 potongan
+                                {{ $pointSettings['points_for_discount']->value ?? 10 }} poin = Rp
+                                {{ number_format($pointSettings['discount_per_points']->value ?? 10000, 0, ',', '.') }}
+                                potongan
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-priority-high text-blue-600 mr-2"></i>
@@ -1052,7 +1056,8 @@
                                                 </div>
                                                 <div>
                                                     <span class="text-gray-500">Peserta:</span>
-                                                    <p class="font-medium text-gray-800">{{ $pemesanan->jumlah_peserta }}
+                                                    <p class="font-medium text-gray-800">
+                                                        {{ $pemesanan->transaksi->jumlah_peserta }}
                                                         orang</p>
                                                 </div>
                                                 <div>

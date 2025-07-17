@@ -287,27 +287,32 @@
             /* Add minimum padding for mobile */
             padding-top: 2rem;
             padding-bottom: 2rem;
-            z-index: 50; /* Default z-index untuk modal biasa */
+            z-index: 50;
+            /* Default z-index untuk modal biasa */
         }
 
         /* Modal Login dan Register - Lapisan Paling Depan */
         #modalLogin,
         #modalRegister {
-            z-index: 9999 !important; /* Z-index tertinggi untuk login/register */
+            z-index: 9999 !important;
+            /* Z-index tertinggi untuk login/register */
         }
 
         /* Backdrop khusus untuk login/register */
         #modalLogin .modal-overlay,
         #modalRegister .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.75) !important; /* Backdrop lebih gelap */
-            backdrop-filter: blur(12px) !important; /* Blur lebih kuat */
+            background-color: rgba(0, 0, 0, 0.75) !important;
+            /* Backdrop lebih gelap */
+            backdrop-filter: blur(12px) !important;
+            /* Blur lebih kuat */
         }
 
         .modal-content {
             animation: modalSlideIn 0.3s ease-out;
             /* Ensure modal can shrink on small screens */
             width: 100%;
-            max-width: 28rem; /* max-w-md equivalent */
+            max-width: 28rem;
+            /* max-w-md equivalent */
             /* Allow content to determine height */
             max-height: calc(100vh - 4rem);
             /* Make modal content scrollable if needed */
@@ -318,11 +323,13 @@
 
         /* For larger modals */
         .modal-content-large {
-            max-width: 72rem; /* max-w-6xl equivalent */
+            max-width: 72rem;
+            /* max-w-6xl equivalent */
         }
 
         .modal-content-xl {
-            max-width: 80rem; /* max-w-5xl equivalent */
+            max-width: 80rem;
+            /* max-w-5xl equivalent */
         }
 
         @keyframes modalSlideIn {
@@ -945,11 +952,15 @@
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-calculator text-blue-600 mr-2"></i>
-                                Setiap Rp 500.000 = 3 poin
+                                Setiap Rp
+                                {{ number_format($pointSettings['points_per_transaction']->value ?? 500000, 0, ',', '.') }}
+                                = {{ $pointSettings['points_earned_per_transaction']->value ?? 5 }} poin
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-tags text-blue-600 mr-2"></i>
-                                10 poin = Rp 10.000 potongan
+                                {{ $pointSettings['points_for_discount']->value ?? 10 }} poin = Rp
+                                {{ number_format($pointSettings['discount_per_points']->value ?? 10000, 0, ',', '.') }}
+                                potongan
                             </li>
                             <li class="flex items-center">
                                 <i class="fas fa-priority-high text-blue-600 mr-2"></i>
@@ -1078,7 +1089,8 @@
                                                 </div>
                                                 <div>
                                                     <span class="text-gray-500">Peserta:</span>
-                                                    <p class="font-medium text-gray-800">{{ $pemesanan->jumlah_peserta }}
+                                                    <p class="font-medium text-gray-800">
+                                                        {{ $pemesanan->transaksi->jumlah_peserta }}
                                                         orang</p>
                                                 </div>
                                                 <div>
@@ -1241,7 +1253,8 @@
 
     <!-- Booking Modal (Enhanced) -->
     <div id="kontainerPicker" class="hidden modal-overlay overflow-y-auto">
-        <div class="modal-content modal-content-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl my-4 sm:my-8 mx-3 sm:mx-auto animate-fadeIn">
+        <div
+            class="modal-content modal-content-xl bg-white rounded-xl sm:rounded-2xl shadow-2xl my-4 sm:my-8 mx-3 sm:mx-auto animate-fadeIn">
             {{-- STEP 1 --}}
             <div id="step1" class="modal-body p-4 sm:p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -1313,9 +1326,9 @@
                     <div class="w-full lg:w-1/2">
                         <div class="flex justify-between items-center mb-3">
                             <h5 class="font-medium text-gray-700 text-base sm:text-lg">Mobil
-</cut_off_point>
+                                </cut_off_point>
 
-Tersedia</h5>
+                                Tersedia</h5>
                             <button id="tombolResetPilihan" onclick="resetPilihanMobil()"
                                 class="hidden text-sm text-red-600 hover:text-red-800 font-medium">
                                 <i class="fas fa-undo mr-1"></i> Reset Pilihan
@@ -1439,15 +1452,21 @@ Tersedia</h5>
 
                                             <div id="pointsInputSection" class="hidden">
                                                 <div class="flex items-center space-x-2">
-                                                    <input type="number" id="pointsToUse" min="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
+                                                    <input type="number" id="pointsToUse"
+                                                        min="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
                                                         max="{{ Auth::guard('pelanggan')->user()->points }}"
-                                                        step="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}" placeholder="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
+                                                        step="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
+                                                        placeholder="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
                                                         onchange="calculatePointsDiscount()"
                                                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
                                                     <span class="text-sm text-gray-600">poin</span>
                                                 </div>
                                                 <p class="text-xs text-gray-500 mt-1">
-                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }} poin = Rp {{ number_format(\App\Models\PointSetting::getValue('discount_per_points', 10000), 0, ',', '.') }} potongan (kelipatan {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }})
+                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}
+                                                    poin = Rp
+                                                    {{ number_format(\App\Models\PointSetting::getValue('discount_per_points', 10000), 0, ',', '.') }}
+                                                    potongan (kelipatan
+                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }})
                                                 </p>
                                                 <div id="pointsDiscountPreview"
                                                     class="hidden mt-2 text-sm font-medium text-green-600">
@@ -1506,12 +1525,13 @@ Tersedia</h5>
                                 </div>
                                 <div id="alamatInputSection" class="hidden">
                                     <label class="block text-gray-700 font-medium mb-2 text-sm">Alamat Baru</label>
-                                    <textarea id="alamatBaru" name="alamat_baru" rows="3" 
+                                    <textarea id="alamatBaru" name="alamat_baru" rows="3"
                                         placeholder="Masukkan alamat lengkap untuk penjemputan..."
                                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm resize-none"></textarea>
                                     <p class="text-xs text-gray-500 mt-1">
                                         <i class="fas fa-info-circle mr-1"></i>
-                                        Alamat ini akan digunakan untuk penjemputan pada tanggal {{ date('d M Y', strtotime('+1 day')) }}
+                                        Alamat ini akan digunakan untuk penjemputan pada tanggal
+                                        {{ date('d M Y', strtotime('+1 day')) }}
                                     </p>
                                 </div>
                             </div>
@@ -1898,7 +1918,8 @@ Tersedia</h5>
                 pointsInputSection.classList.remove('hidden');
                 pointsSection.classList.add('points-active');
                 // Set default value
-                document.getElementById('pointsToUse').value = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
+                document.getElementById('pointsToUse').value =
+                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
                 calculatePointsDiscount();
             } else {
                 pointsInputSection.classList.add('hidden');
@@ -1946,7 +1967,8 @@ Tersedia</h5>
                 input.value = maxCapacity;
                 input.classList.add('border-red-500');
                 errorElement.classList.remove('hidden');
-                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Maksimal ' + maxCapacity + ' peserta';
+                errorElement.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Maksimal ' + maxCapacity +
+                    ' peserta';
                 tombolKonfirmasi.disabled = true;
                 return false;
             }
@@ -1954,7 +1976,7 @@ Tersedia</h5>
             // Input valid
             input.classList.remove('border-red-500');
             errorElement.classList.add('hidden');
-            
+
             // Cek apakah semua input valid
             const allInputs = document.querySelectorAll('.participant-input');
             let allValid = true;
@@ -1982,9 +2004,10 @@ Tersedia</h5>
 
             const pointsForDiscount = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
             const discountPerPoints = {{ \App\Models\PointSetting::getValue('discount_per_points', 10000) }};
-            
+
             if (pointsToUse % pointsForDiscount !== 0) {
-                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / pointsForDiscount) * pointsForDiscount;
+                document.getElementById('pointsToUse').value = Math.floor(pointsToUse / pointsForDiscount) *
+                    pointsForDiscount;
                 return calculatePointsDiscount();
             }
 
@@ -2196,7 +2219,7 @@ Tersedia</h5>
             // Validasi kapasitas mobil sebelum submit
             const allInputs = document.querySelectorAll('.participant-input');
             let validationError = false;
-            
+
             allInputs.forEach(input => {
                 const value = parseInt(input.value);
                 const maxCap = parseInt(input.dataset.maxCapacity);
@@ -2235,7 +2258,7 @@ Tersedia</h5>
             formData.append('tanggal', terpilih.tanggal);
             formData.append('jam_mulai', terpilih.waktu);
             formData.append('points_used', terpilih.pointsUsed);
-            
+
             // Add address data
             const updateAlamat = document.getElementById('updateAlamat').checked;
             formData.append('update_alamat', updateAlamat.toString());
@@ -2333,13 +2356,11 @@ Tersedia</h5>
                                 },
                                 onClose: function() {
                                     // User menutup popup pembayaran
-                                    alert(
-                                        'Pembayaran dibatalkan. Booking Anda akan di-hold selama 4 jam. Silakan lakukan pembayaran di kantor kami.'
-                                    );
+
 
                                     // Tampilkan modal dengan pesan hold
                                     document.getElementById('pesanSukses').textContent =
-                                        "Booking berhasil dibuat dan akan di-hold selama 4 jam. Silakan lakukan pembayaran di kantor kami.";
+                                        "Booking berhasil dibuat dan silakan cek email untuk melihat detail E-Ticket.";
                                     document.getElementById('modalKonfirmasi').classList.remove('hidden');
                                 }
                             });
@@ -2676,7 +2697,7 @@ Tersedia</h5>
                     <div class="mb-4">
                         <label class="block text-gray-700 font-medium mb-2 text-sm">Jumlah Peserta</label>
                         <input type="number" name="jumlah_peserta[]" min="1" max="${mobil.kursi}" value="${mobil.kursi}"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm participant-input" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm participant-input"
                             data-mobil-index="${index}" data-max-capacity="${mobil.kursi}" required
                             onchange="validateParticipantCount(this)">
                         <div class="mt-1 text-xs text-gray-500">

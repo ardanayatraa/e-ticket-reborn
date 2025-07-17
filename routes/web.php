@@ -61,7 +61,7 @@ Route::middleware([
         ->name('transaksi.confirm');
     Route::get('/laporan', [TransaksiController::class, 'laporan'])
         ->name('laporan');
-    
+
     // Point Settings Routes
     Route::get('/point-settings', [App\Http\Controllers\PointSettingsController::class, 'index'])
         ->name('point-settings.index');
