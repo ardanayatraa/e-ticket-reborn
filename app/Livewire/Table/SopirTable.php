@@ -45,24 +45,5 @@ class SopirTable extends DataTableComponent
         ];
     }
 
-    /**
-     * Langsung dipanggil oleh wire:click
-     */
-    public function downloadTicket(int $sopirId, string $tanggal)
-    {
-        $k = Ketersediaan::with([
-                'transaksi',
-                'pemesanan.pelanggan',
-                'pemesanan.mobil.sopir'
-            ])
-            ->where('sopir_id', $sopirId)
-            ->where('tanggal_keberangkatan', $tanggal)
-            ->firstOrFail();
-        $pdf = Pdf::loadView('pdf.ticket-on-sopir', ['ketersediaan'=>$k]);
 
-        return response()->streamDownload(
-            fn()=>print($pdf->output()),
-            "tiket-{$k->terpesan_id}-{$tanggal}.pdf"
-        );
-    }
 }

@@ -9,40 +9,32 @@ return new class extends Migration
     public function up()
     {
         Schema::create('point_settings', function (Blueprint $table) {
-            $table->id();
-            $table->string('key')->unique();
-            $table->text('value');
-            $table->string('description')->nullable();
+            $table->id('point_id');
+            $table->string('nama_season_point');
+            $table->integer('minimum_transaksi');
+            $table->integer('jumlah_point_diperoleh');
+            $table->integer('harga_satuan_point');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
 
         // Insert default values
         DB::table('point_settings')->insert([
             [
-                'key' => 'points_per_transaction',
-                'value' => '500000',
-                'description' => 'Jumlah rupiah untuk mendapatkan poin (setiap Rp X = 5 poin)',
+                'nama_season_point' => 'Low Season',
+                'minimum_transaksi' => 500000,
+                'jumlah_point_diperoleh' => 5,
+                'harga_satuan_point' => 10000,
+                'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
             [
-                'key' => 'points_earned_per_transaction',
-                'value' => '5',
-                'description' => 'Jumlah poin yang didapat per transaksi',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'key' => 'points_for_discount',
-                'value' => '10',
-                'description' => 'Jumlah poin untuk mendapatkan diskon',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'key' => 'discount_per_points',
-                'value' => '10000',
-                'description' => 'Jumlah diskon rupiah per poin (10 poin = Rp X)',
+                'nama_season_point' => 'High Season',
+                'minimum_transaksi' => 1000000,
+                'jumlah_point_diperoleh' => 10,
+                'harga_satuan_point' => 15000,
+                'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

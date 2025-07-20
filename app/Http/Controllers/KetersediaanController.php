@@ -13,7 +13,7 @@ class KetersediaanController extends Controller
 {
     public function index()
     {
-        $data = Ketersediaan::with('pemesanan','mobil','sopir')->get();
+        $data = Ketersediaan::with('pemesanan','mobil')->get();
         return view('ketersediaan.index', compact('data'));
     }
 
@@ -21,8 +21,7 @@ class KetersediaanController extends Controller
     {
         $pesanan = Pemesanan::all();
         $mobils  = Mobil::all();
-        $sopirs  = Sopir::all();
-        return view('ketersediaan.create', compact('pesanan','mobils','sopirs'));
+        return view('ketersediaan.create', compact('pesanan','mobils'));
     }
 
     public function store(Request $request)
@@ -30,7 +29,6 @@ class KetersediaanController extends Controller
         $data = $request->validate([
             'pemesanan_id'         => 'required|exists:pemesanans,pemesanan_id',
             'mobil_id'             => 'required|exists:mobils,mobil_id',
-            'sopir_id'             => 'required|exists:sopirs,sopir_id',
             'tanggal_keberangkatan'=> 'required|date',
             'status_ketersediaan'  => 'required|string',
         ]);
@@ -48,8 +46,7 @@ class KetersediaanController extends Controller
     {
         $pesanan = Pemesanan::all();
         $mobils  = Mobil::all();
-        $sopirs  = Sopir::all();
-        return view('ketersediaan.edit', compact('ketersediaan','pesanan','mobils','sopirs'));
+        return view('ketersediaan.edit', compact('ketersediaan','pesanan','mobils'));
     }
 
     public function update(Request $request, Ketersediaan $ketersediaan)

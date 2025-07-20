@@ -42,7 +42,7 @@ class BookingController extends Controller
 
             // --- SOLUSI: Update semua transaksi terkait booking multiple mobil ---
             // Ambil info penting
-            $pemesanId = $transaksi->pemesan_id;
+            $pelangganId = $transaksi->pelanggan_id;
             $paketWisataId = $transaksi->paketwisata_id;
             $paidDeposit = $transaksi->deposit;
             $createdAt = $transaksi->created_at;
@@ -52,7 +52,7 @@ class BookingController extends Controller
 
             if ($tanggalKeberangkatan) {
                 // Update semua transaksi yang pending, user & paket & tanggal sama, dibuat dalam 1 menit
-                $relatedTransaksi = \App\Models\Transaksi::where('pemesan_id', $pemesanId)
+                $relatedTransaksi = \App\Models\Transaksi::where('pelanggan_id', $pelangganId)
                     ->where('paketwisata_id', $paketWisataId)
                     ->where('transaksi_status', 'pending')
                     ->whereHas('pemesanan', function($q) use ($tanggalKeberangkatan) {

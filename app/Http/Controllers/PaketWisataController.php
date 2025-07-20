@@ -127,16 +127,16 @@ class PaketWisataController extends Controller
         ->firstOrFail();
     $mobil = Mobil::all();
 
-    // Ambil pengaturan poin untuk keuntungan member
-    $pointSettings = PointSetting::all()->keyBy('key');
+    // Ambil pengaturan poin aktif untuk keuntungan member
+    $activePointSettings = PointSetting::getActiveSettings();
 
     // Jika request AJAX, return view detail saja
     if (request()->ajax()) {
-        return view('paket-wisata.detail-content', compact('paket', 'mobil', 'pointSettings'));
+        return view('paket-wisata.detail-content', compact('paket', 'mobil', 'activePointSettings'));
     }
 
     // Jika bukan AJAX, return halaman detail lengkap
-    return view('paket-wisata.detail', compact('paket', 'mobil', 'pointSettings'));
+    return view('paket-wisata.detail', compact('paket', 'mobil', 'activePointSettings'));
 }
 
     // PERBAIKAN: Hapus dd(1) dan gunakan parameter yang konsisten
@@ -302,10 +302,10 @@ class PaketWisataController extends Controller
             ->get();
         $mobil = Mobil::all();
 
-        // Ambil pengaturan poin untuk keuntungan member
-        $pointSettings = PointSetting::all()->keyBy('key');
+        // Ambil pengaturan poin aktif untuk keuntungan member
+        $activePointSettings = PointSetting::getActiveSettings();
 
-        return view('paket-wisata.landing-page', compact('paket', 'mobil', 'pointSettings'));
+        return view('paket-wisata.landing-page', compact('paket', 'mobil', 'activePointSettings'));
     }
 
     public function check(Request $request)

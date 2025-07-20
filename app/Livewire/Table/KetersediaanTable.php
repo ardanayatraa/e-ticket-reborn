@@ -19,7 +19,7 @@ class KetersediaanTable extends DataTableComponent
 
     public function builder(): Builder
     {
-        return Ketersediaan::with(['pemesanan.pelanggan', 'mobil', 'sopir']);
+        return Ketersediaan::with(['pemesanan.pelanggan', 'mobil']);
     }
 
     public function columns(): array
@@ -35,9 +35,7 @@ class KetersediaanTable extends DataTableComponent
                 ->sortable()
                 ->format(fn($v, $row) => optional($row->mobil)->nama_kendaraan ?? '-'),
 
-            Column::make("Sopir", "sopir_id")
-                ->sortable()
-                ->format(fn($v, $row) => optional($row->sopir)->nama_sopir ?? '-'),
+
 
             Column::make("Tanggal Keberangkatan", "tanggal_keberangkatan")->sortable(),
             // Column::make("Status Ketersediaan", "status_ketersediaan")->sortable(),

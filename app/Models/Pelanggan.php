@@ -50,12 +50,12 @@ class Pelanggan extends Authenticatable
     // Relasi
     public function pemesanans()
     {
-        return $this->hasMany(Pemesanan::class, 'pemesan_id');
+        return $this->hasMany(Pemesanan::class, 'pelanggan_id');
     }
 
     public function transaksis()
     {
-        return $this->hasMany(Transaksi::class, 'pemesan_id');
+        return $this->hasMany(Transaksi::class, 'pelanggan_id');
     }
 
     // Methods untuk member

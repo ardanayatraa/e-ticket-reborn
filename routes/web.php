@@ -15,6 +15,7 @@ use App\Http\Controllers\MobilController;
 use App\Http\Controllers\Auth\PelangganAuthController;
 use App\Http\Controllers\MemberController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\PointSettingsController;
 use Illuminate\Support\Facades\Auth;
 
 /*
@@ -63,10 +64,11 @@ Route::middleware([
         ->name('laporan');
 
     // Point Settings Routes
-    Route::get('/point-settings', [App\Http\Controllers\PointSettingsController::class, 'index'])
-        ->name('point-settings.index');
-    Route::put('/point-settings', [App\Http\Controllers\PointSettingsController::class, 'update'])
-        ->name('point-settings.update');
+    Route::resource('point-settings', PointSettingsController::class);
+    Route::put('/point-settings/{id}/toggle-active', [PointSettingsController::class, 'toggleActive'])
+        ->name('point-settings.toggle-active');
+    Route::post('/point-settings/preview', [PointSettingsController::class, 'preview'])
+        ->name('point-settings.preview');
 });
 
 // Pelanggan Authentication Routes

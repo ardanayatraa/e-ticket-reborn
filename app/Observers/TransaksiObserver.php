@@ -42,7 +42,6 @@ class TransaksiObserver
                 Ketersediaan::create([
                     'pemesanan_id'          => $transaksi->pemesanan_id,
                     'mobil_id'              => $mobil->mobil_id,
-                    'sopir_id'              => $mobil->sopir->sopir_id,
                     'tanggal_keberangkatan' => $p->tanggal_keberangkatan,
                     'status_ketersediaan'   => false,
                 ]);
@@ -65,10 +64,7 @@ class TransaksiObserver
                 }
 
                 // Ambil pengaturan poin dari database
-                $pointsPerTransaction = (int) PointSetting::getValue('points_per_transaction', 500000);
-                $pointsEarnedPerTransaction = (int) PointSetting::getValue('points_earned_per_transaction', 5);
-                
-                $poinTambahan = floor($hargaAsli / $pointsPerTransaction) * $pointsEarnedPerTransaction;
+                $poinTambahan = PointSetting::calculateEarnedPoints($hargaAsli);
 
                 if ($poinTambahan > 0) {
                     $pelanggan->update([

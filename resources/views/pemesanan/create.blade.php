@@ -17,16 +17,16 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {{-- Pelanggan --}}
                         <div>
-                            <label for="pemesan_id" class="block font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            <label for="pelanggan_id" class="block font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Pelanggan
                             </label>
-                            <select id="pemesan_id" name="pemesan_id" required
+                            <select id="pelanggan_id" name="pelanggan_id" required
                                 class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                        focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">
                                 <option value="">-- Pilih Pelanggan --</option>
                                 @foreach ($pelanggan as $p)
                                     <option value="{{ $p->pelanggan_id }}"
-                                        {{ old('pemesan_id') == $p->pelanggan_id ? 'selected' : '' }}>
+                                        {{ old('pelanggan_id') == $p->pelanggan_id ? 'selected' : '' }}>
                                         {{ $p->nama_pemesan }}
                                     </option>
                                 @endforeach

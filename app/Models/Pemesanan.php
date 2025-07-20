@@ -10,7 +10,7 @@ class Pemesanan extends Model
     use HasFactory;
 
     protected $primaryKey = 'pemesanan_id';
-    protected $fillable = ['pemesan_id', 'paketwisata_id', 'mobil_id', 'jam_mulai', 'tanggal_keberangkatan'];
+    protected $fillable = ['pelanggan_id', 'paketwisata_id', 'mobil_id', 'jam_mulai', 'tanggal_keberangkatan'];
 
     protected $casts = [
         'tanggal_keberangkatan' => 'date',
@@ -18,7 +18,7 @@ class Pemesanan extends Model
 
     public function pelanggan()
     {
-        return $this->belongsTo(Pelanggan::class, 'pemesan_id', 'pelanggan_id');
+        return $this->belongsTo(Pelanggan::class, 'pelanggan_id', 'pelanggan_id');
     }
 
     public function paketWisata()

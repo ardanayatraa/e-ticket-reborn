@@ -46,7 +46,7 @@ class TransaksiController extends Controller
     {
         $data = $request->validate([
             'paketwisata_id'   => 'required|exists:paket_wisatas,paketwisata_id',
-            'pemesan_id'       => 'required|exists:pelanggans,pelanggan_id',
+            'pelanggan_id'     => 'required|exists:pelanggans,pelanggan_id',
             'pemesanan_id'     => 'required|exists:pemesanans,pemesanan_id',
             'jenis_transaksi'  => 'required|string|max:255',
             'deposit'          => 'required|numeric|min:0',

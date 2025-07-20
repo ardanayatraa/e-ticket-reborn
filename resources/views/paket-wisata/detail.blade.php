@@ -917,18 +917,31 @@
                                 <i class="fas fa-star text-blue-600 mr-2"></i>
                                 Dapatkan poin setiap pembelian
                             </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-calculator text-blue-600 mr-2"></i>
-                                Setiap Rp
-                                {{ number_format($pointSettings['points_per_transaction']->value ?? 500000, 0, ',', '.') }}
-                                = {{ $pointSettings['points_earned_per_transaction']->value ?? 5 }} poin
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-tags text-blue-600 mr-2"></i>
-                                {{ $pointSettings['points_for_discount']->value ?? 10 }} poin = Rp
-                                {{ number_format($pointSettings['discount_per_points']->value ?? 10000, 0, ',', '.') }}
-                                potongan
-                            </li>
+                            @if($activePointSettings->isNotEmpty())
+                                @php
+                                    $firstSetting = $activePointSettings->first();
+                                @endphp
+                                <li class="flex items-center">
+                                    <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                    Setiap Rp {{ number_format($firstSetting->minimum_transaksi, 0, ',', '.') }}
+                                    = {{ $firstSetting->jumlah_point_diperoleh }} poin
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-tags text-blue-600 mr-2"></i>
+                                    {{ $firstSetting->jumlah_point_diperoleh }} poin = Rp
+                                    {{ number_format($firstSetting->harga_satuan_point, 0, ',', '.') }}
+                                    potongan
+                                </li>
+                            @else
+                                <li class="flex items-center">
+                                    <i class="fas fa-calculator text-blue-600 mr-2"></i>
+                                    Setiap Rp 500.000 = 5 poin
+                                </li>
+                                <li class="flex items-center">
+                                    <i class="fas fa-tags text-blue-600 mr-2"></i>
+                                    5 poin = Rp 10.000 potongan
+                                </li>
+                            @endif
                             <li class="flex items-center">
                                 <i class="fas fa-priority-high text-blue-600 mr-2"></i>
                                 Akses prioritas booking
@@ -1091,8 +1104,7 @@
 
                                                         @if (Auth::guard('pelanggan')->user()->is_member && $pemesanan->transaksi->deposit)
                                                             @php
-                                                                $pointsEarned =
-                                                                    floor($pemesanan->transaksi->deposit / 500000) * 5;
+                                                                $pointsEarned = \App\Models\PointSetting::calculateEarnedPoints($pemesanan->transaksi->deposit);
                                                             @endphp
                                                             @if ($pointsEarned > 0)
                                                                 <span class="text-sm text-blue-600 font-medium">
@@ -1398,50 +1410,54 @@
 
                             <!-- Points Redemption Section for Members -->
                             @auth('pelanggan')
-                                @if (Auth::guard('pelanggan')->user()->is_member && Auth::guard('pelanggan')->user()->points >= 10)
-                                    <div id="pointsRedemptionSection" class="mt-4 p-4 points-section rounded-lg">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <h6 class="font-semibold text-gray-700">Tukar Poin</h6>
-                                            <div class="text-sm text-blue-600 font-medium">
-                                                <i class="fas fa-star mr-1"></i>
-                                                {{ Auth::guard('pelanggan')->user()->points }} poin tersedia
-                                            </div>
-                                        </div>
-
-                                        <div class="space-y-3">
-                                            <div class="flex items-center">
-                                                <input type="checkbox" id="usePoints" onchange="togglePointsRedemption()"
-                                                    class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
-                                                <label for="usePoints" class="ml-2 text-sm text-gray-700">
-                                                    Gunakan poin untuk potongan harga
-                                                </label>
-                                            </div>
-
-                                            <div id="pointsInputSection" class="hidden">
-                                                <div class="flex items-center space-x-2">
-                                                    <input type="number" id="pointsToUse"
-                                                        min="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
-                                                        max="{{ Auth::guard('pelanggan')->user()->points }}"
-                                                        step="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
-                                                        placeholder="{{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}"
-                                                        onchange="calculatePointsDiscount()"
-                                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
-                                                    <span class="text-sm text-gray-600">poin</span>
-                                                </div>
-                                                <p class="text-xs text-gray-500 mt-1">
-                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }}
-                                                    poin = Rp
-                                                    {{ number_format(\App\Models\PointSetting::getValue('discount_per_points', 10000), 0, ',', '.') }}
-                                                    potongan (kelipatan
-                                                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }})
-                                                </p>
-                                                <div id="pointsDiscountPreview"
-                                                    class="hidden mt-2 text-sm font-medium text-green-600">
-                                                    Potongan: <span id="discountAmount">Rp 0</span>
+                                @if (Auth::guard('pelanggan')->user()->is_member && $activePointSettings->isNotEmpty())
+                                    @php
+                                        $firstSetting = $activePointSettings->first();
+                                        $minPoints = $firstSetting->jumlah_point_diperoleh;
+                                    @endphp
+                                    @if (Auth::guard('pelanggan')->user()->points >= $minPoints)
+                                        <div id="pointsRedemptionSection" class="mt-4 p-4 points-section rounded-lg">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <h6 class="font-semibold text-gray-700">Tukar Poin</h6>
+                                                <div class="text-sm text-blue-600 font-medium">
+                                                    <i class="fas fa-star mr-1"></i>
+                                                    {{ Auth::guard('pelanggan')->user()->points }} poin tersedia
                                                 </div>
                                             </div>
+
+                                            <div class="space-y-3">
+                                                <div class="flex items-center">
+                                                    <input type="checkbox" id="usePoints" onchange="togglePointsRedemption()"
+                                                        class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                                                    <label for="usePoints" class="ml-2 text-sm text-gray-700">
+                                                        Gunakan poin untuk potongan harga
+                                                    </label>
+                                                </div>
+
+                                                <div id="pointsInputSection" class="hidden">
+                                                    <div class="flex items-center space-x-2">
+                                                        <input type="number" id="pointsToUse"
+                                                            min="{{ $minPoints }}"
+                                                            max="{{ Auth::guard('pelanggan')->user()->points }}"
+                                                            step="{{ $minPoints }}"
+                                                            placeholder="{{ $minPoints }}"
+                                                            onchange="calculatePointsDiscount()"
+                                                            class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm">
+                                                        <span class="text-sm text-gray-600">poin</span>
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-1">
+                                                        {{ $minPoints }} poin = Rp
+                                                        {{ number_format($firstSetting->harga_satuan_point, 0, ',', '.') }}
+                                                        potongan (kelipatan {{ $minPoints }})
+                                                    </p>
+                                                    <div id="pointsDiscountPreview"
+                                                        class="hidden mt-2 text-sm font-medium text-green-600">
+                                                        Potongan: <span id="discountAmount">Rp 0</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    @endif
                                 @endif
                             @endauth
 
@@ -1885,8 +1901,11 @@
                 pointsInputSection.classList.remove('hidden');
                 pointsSection.classList.add('points-active');
                 // Set default value
-                document.getElementById('pointsToUse').value =
-                    {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
+                @if($activePointSettings->isNotEmpty())
+                    document.getElementById('pointsToUse').value = {{ $activePointSettings->first()->jumlah_point_diperoleh }};
+                @else
+                    document.getElementById('pointsToUse').value = 5;
+                @endif
                 calculatePointsDiscount();
             } else {
                 pointsInputSection.classList.add('hidden');
@@ -1969,8 +1988,13 @@
                 return calculatePointsDiscount();
             }
 
-            const pointsForDiscount = {{ \App\Models\PointSetting::getValue('points_for_discount', 10) }};
-            const discountPerPoints = {{ \App\Models\PointSetting::getValue('discount_per_points', 10000) }};
+            @if($activePointSettings->isNotEmpty())
+                const pointsForDiscount = {{ $activePointSettings->first()->jumlah_point_diperoleh }};
+                const discountPerPoints = {{ $activePointSettings->first()->harga_satuan_point }};
+            @else
+                const pointsForDiscount = 5;
+                const discountPerPoints = 10000;
+            @endif
 
             if (pointsToUse % pointsForDiscount !== 0) {
                 document.getElementById('pointsToUse').value = Math.floor(pointsToUse / pointsForDiscount) *

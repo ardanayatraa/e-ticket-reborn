@@ -3,8 +3,10 @@
     // tanggal hari ini
     $today = Carbon::today()->toDateString();
 
-    // cek apakah ada Tiket hari ini untuk sopir ini
-    $existsToday = \App\Models\Ketersediaan::where('sopir_id', $rowId)
+    // cek apakah ada Tiket hari ini untuk sopir ini melalui mobil
+    $existsToday = \App\Models\Ketersediaan::whereHas('mobil', function($q) use ($rowId) {
+            $q->where('sopir_id', $rowId);
+        })
         ->whereDate('tanggal_keberangkatan', $today)
         ->exists();
 @endphp

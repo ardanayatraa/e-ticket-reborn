@@ -36,7 +36,7 @@ class PemesananTable extends DataTableComponent
         return [
             Column::make("Pemesanan ID", "pemesanan_id")->sortable(),
 
-            Column::make("Pemesan", "pemesan_id")
+            Column::make("Pelanggan", "pelanggan_id")
                 ->sortable()
                 ->format(fn($v, $row) => optional($row->pelanggan)->nama_pemesan ?? '-'),
 

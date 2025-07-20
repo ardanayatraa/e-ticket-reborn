@@ -14,7 +14,7 @@ class Transaksi extends Model
 
     protected $fillable = [
         'paketwisata_id',
-        'pemesan_id',
+        'pelanggan_id',
         'pemesanan_id',
         'jenis_transaksi',
         'deposit',
@@ -56,13 +56,13 @@ class Transaksi extends Model
     }
 
     /**
-     * Relasi ke Pelanggan (pemesan)
+     * Relasi ke Pelanggan
      */
     public function pelanggan()
     {
         return $this->belongsTo(
             Pelanggan::class,
-            'pemesan_id',
+            'pelanggan_id',
             'pelanggan_id'
         );
     }

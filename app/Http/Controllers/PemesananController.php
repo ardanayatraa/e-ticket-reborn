@@ -98,15 +98,20 @@ class PemesananController extends Controller
                 }
 
                 // Ambil pengaturan poin dari database
-                $pointsForDiscount = (int) PointSetting::getValue('points_for_discount', 10);
-                $discountPerPoints = (int) PointSetting::getValue('discount_per_points', 10000);
+                $activeSettings = PointSetting::getActiveSettings();
                 
-                if ($pointsUsed % $pointsForDiscount !== 0) {
-                    throw new \Exception("Poin harus dalam kelipatan {$pointsForDiscount}");
+                if ($activeSettings->isEmpty()) {
+                    throw new \Exception("Tidak ada pengaturan poin yang aktif");
+                }
+                
+                $setting = $activeSettings->first();
+                
+                if ($pointsUsed % $setting->jumlah_point_diperoleh !== 0) {
+                    throw new \Exception("Poin harus dalam kelipatan {$setting->jumlah_point_diperoleh}");
                 }
 
                 // Hitung diskon berdasarkan pengaturan
-                $totalDiscount = ($pointsUsed / $pointsForDiscount) * $discountPerPoints;
+                $totalDiscount = PointSetting::calculateDiscount($pointsUsed);
             }
 
             // Validasi kapasitas dan durasi
@@ -150,7 +155,7 @@ class PemesananController extends Controller
                 $jumlahPeserta = $request->jumlah_peserta[$index];
 
                 $pemesanan = Pemesanan::create([
-                    'pemesan_id'            => $pelanggan->pelanggan_id,
+                    'pelanggan_id'          => $pelanggan->pelanggan_id,
                     'paketwisata_id'        => $request->paket_id,
                     'mobil_id'              => $mobilId,
                     'tanggal_keberangkatan' => $request->tanggal,
@@ -175,7 +180,7 @@ class PemesananController extends Controller
 
                 $transaksi = Transaksi::create([
                     'paketwisata_id'   => $request->paket_id,
-                    'pemesan_id'       => $pelanggan->pelanggan_id,
+                    'pelanggan_id'     => $pelanggan->pelanggan_id,
                     'pemesanan_id'     => $pemesanan->pemesanan_id,
                     'order_id'         => $orderId,
                     'deposit'          => 0, // Akan diisi setelah pembayaran via Midtrans

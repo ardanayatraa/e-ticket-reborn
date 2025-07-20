@@ -27,11 +27,7 @@
                                 value="{{ $ketersediaan->mobil->nama_kendaraan }} – {{ $ketersediaan->mobil->nomor_kendaraan }}"
                                 disabled class="block w-full bg-gray-100 border border-gray-300 rounded-lg p-2" />
                         </div>
-                        <div>
-                            <label class="block font-medium text-gray-700 dark:text-gray-300 mb-2">Sopir</label>
-                            <input type="text" value="{{ $ketersediaan->sopir->nama_sopir }}" disabled
-                                class="block w-full bg-gray-100 border border-gray-300 rounded-lg p-2" />
-                        </div>
+
                         <div>
                             <label class="block font-medium text-gray-700 dark:text-gray-300 mb-2">Tanggal
                                 Keberangkatan</label>

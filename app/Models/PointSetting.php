@@ -10,48 +10,58 @@ class PointSetting extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['key', 'value', 'description'];
+    protected $primaryKey = 'point_id';
+    protected $fillable = [
+        'nama_season_point',
+        'minimum_transaksi',
+        'jumlah_point_diperoleh',
+        'harga_satuan_point',
+        'is_active'
+    ];
 
     protected $casts = [
-        'value' => 'integer',
+        'minimum_transaksi' => 'integer',
+        'jumlah_point_diperoleh' => 'integer',
+        'harga_satuan_point' => 'integer',
+        'is_active' => 'boolean',
     ];
 
     /**
-     * Set or update a setting value
+     * Get active point settings
      */
-    public static function setValue($key, $value)
+    public static function getActiveSettings()
     {
-        $setting = static::updateOrCreate(
-            ['key' => $key],
-            ['value' => $value]
-        );
+        return Cache::remember('active_point_settings', 3600, function () {
+            return static::where('is_active', true)->get();
+        });
+    }
 
-        // Clear cache when setting is updated
-        Cache::forget("point_setting_{$key}");
-        Cache::forget('all_point_settings');
+    /**
+     * Get point setting by minimum transaction amount
+     */
+    public static function getSettingByTransactionAmount($amount)
+    {
+        return static::where('is_active', true)
+            ->where('minimum_transaksi', '<=', $amount)
+            ->orderBy('minimum_transaksi', 'desc')
+            ->first();
+    }
 
+    /**
+     * Get the best setting for a transaction amount (highest minimum that applies)
+     */
+    public static function getBestSettingForAmount($amount)
+    {
+        $setting = static::getSettingByTransactionAmount($amount);
+        
+        if (!$setting) {
+            // Return the lowest minimum setting if no applicable setting found
+            return static::where('is_active', true)
+                ->orderBy('minimum_transaksi', 'asc')
+                ->first();
+        }
+        
         return $setting;
-    }
-
-    /**
-     * Get a setting value with caching
-     */
-    public static function getValue($key, $default = null)
-    {
-        return Cache::remember("point_setting_{$key}", 3600, function () use ($key, $default) {
-            $setting = static::where('key', $key)->first();
-            return $setting ? $setting->value : $default;
-        });
-    }
-
-    /**
-     * Get all settings as key-value pairs with caching
-     */
-    public static function getAllSettings()
-    {
-        return Cache::remember('all_point_settings', 3600, function () {
-            return static::pluck('value', 'key')->toArray();
-        });
     }
 
     /**
@@ -59,10 +69,13 @@ class PointSetting extends Model
      */
     public static function calculateEarnedPoints($transactionAmount)
     {
-        $pointsPerTransaction = static::getValue('points_per_transaction', 500000);
-        $pointsEarned = static::getValue('points_earned_per_transaction', 5);
+        $setting = static::getSettingByTransactionAmount($transactionAmount);
+        
+        if (!$setting) {
+            return 0;
+        }
 
-        return floor($transactionAmount / $pointsPerTransaction) * $pointsEarned;
+        return floor($transactionAmount / $setting->minimum_transaksi) * $setting->jumlah_point_diperoleh;
     }
 
     /**
@@ -70,11 +83,16 @@ class PointSetting extends Model
      */
     public static function calculateDiscount($points)
     {
-        $pointsForDiscount = static::getValue('points_for_discount', 10);
-        $discountPerPoints = static::getValue('discount_per_points', 10000);
+        $activeSettings = static::getActiveSettings();
+        
+        if ($activeSettings->isEmpty()) {
+            return 0;
+        }
 
-        $discountBatches = floor($points / $pointsForDiscount);
-        return $discountBatches * $discountPerPoints;
+        // Use the first active setting for discount calculation
+        $setting = $activeSettings->first();
+        $discountBatches = floor($points / $setting->jumlah_point_diperoleh);
+        return $discountBatches * $setting->harga_satuan_point;
     }
 
     /**
@@ -82,12 +100,17 @@ class PointSetting extends Model
      */
     public static function getMaxUsablePoints($transactionAmount)
     {
-        $pointsForDiscount = static::getValue('points_for_discount', 10);
-        $discountPerPoints = static::getValue('discount_per_points', 10000);
+        $activeSettings = static::getActiveSettings();
+        
+        if ($activeSettings->isEmpty()) {
+            return 0;
+        }
 
+        $setting = $activeSettings->first();
+        
         // Maximum discount should not exceed transaction amount
-        $maxDiscountBatches = floor($transactionAmount / $discountPerPoints);
-        return $maxDiscountBatches * $pointsForDiscount;
+        $maxDiscountBatches = floor($transactionAmount / $setting->harga_satuan_point);
+        return $maxDiscountBatches * $setting->jumlah_point_diperoleh;
     }
 
     /**
@@ -95,8 +118,14 @@ class PointSetting extends Model
      */
     public static function canUsePointsForDiscount($points)
     {
-        $pointsForDiscount = static::getValue('points_for_discount', 10);
-        return $points >= $pointsForDiscount;
+        $activeSettings = static::getActiveSettings();
+        
+        if ($activeSettings->isEmpty()) {
+            return false;
+        }
+
+        $setting = $activeSettings->first();
+        return $points >= $setting->jumlah_point_diperoleh;
     }
 
     /**
@@ -104,10 +133,13 @@ class PointSetting extends Model
      */
     public static function getPointConversionRate()
     {
-        $pointsPerTransaction = static::getValue('points_per_transaction', 500000);
-        $pointsEarned = static::getValue('points_earned_per_transaction', 5);
+        $setting = static::getActiveSettings()->first();
+        
+        if (!$setting) {
+            return 0;
+        }
 
-        return $pointsPerTransaction / $pointsEarned;
+        return $setting->minimum_transaksi / $setting->jumlah_point_diperoleh;
     }
 
     /**
@@ -115,10 +147,13 @@ class PointSetting extends Model
      */
     public static function getDiscountConversionRate()
     {
-        $pointsForDiscount = static::getValue('points_for_discount', 10);
-        $discountPerPoints = static::getValue('discount_per_points', 10000);
+        $setting = static::getActiveSettings()->first();
+        
+        if (!$setting) {
+            return 0;
+        }
 
-        return $discountPerPoints / $pointsForDiscount;
+        return $setting->harga_satuan_point / $setting->jumlah_point_diperoleh;
     }
 
     /**
@@ -129,21 +164,27 @@ class PointSetting extends Model
         parent::boot();
 
         static::saved(function ($model) {
-            Cache::forget("point_setting_{$model->key}");
-            Cache::forget('all_point_settings');
+            Cache::forget('active_point_settings');
         });
 
         static::deleted(function ($model) {
-            Cache::forget("point_setting_{$model->key}");
-            Cache::forget('all_point_settings');
+            Cache::forget('active_point_settings');
         });
     }
 
     /**
-     * Scope to get specific setting
+     * Scope to get active settings
      */
-    public function scopeKey($query, $key)
+    public function scopeActive($query)
     {
-        return $query->where('key', $key);
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope to get settings by minimum transaction
+     */
+    public function scopeByMinimumTransaction($query, $amount)
+    {
+        return $query->where('minimum_transaksi', '<=', $amount);
     }
 }
