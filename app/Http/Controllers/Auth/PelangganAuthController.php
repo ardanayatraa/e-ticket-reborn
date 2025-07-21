@@ -40,22 +40,55 @@ class PelangganAuthController extends Controller
 
     public function register(Request $request)
     {
-        // Manual captcha verification first
-        $captchaResponse = $request->input('g-recaptcha-response');
-        
-        if (empty($captchaResponse) || !NoCaptcha::verifyResponse($captchaResponse)) {
+        try {
+            // Manual captcha verification first
+            $captchaResponse = $request->input('g-recaptcha-response');
+            
+            if (empty($captchaResponse)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Silakan lengkapi CAPTCHA terlebih dahulu.'
+                ], 422);
+            }
+
+            // Verify reCAPTCHA
+            if (!NoCaptcha::verifyResponse($captchaResponse)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verifikasi CAPTCHA gagal. Silakan coba lagi.'
+                ], 422);
+            }
+
+            $validatedData = $request->validate([
+                'nama_pemesan' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:pelanggans',
+                'password' => 'required|string|min:8|confirmed',
+                'alamat' => 'required|string',
+                'nomor_whatsapp' => 'required|string'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data yang dimasukkan tidak valid.',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('Registration error: ' . $e->getMessage());
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.'
+                ], 500);
+            }
+            
             return back()->withErrors([
-                'captcha' => 'Please complete the captcha verification.'
+                'general' => 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.'
             ])->withInput();
         }
-
-        $validatedData = $request->validate([
-            'nama_pemesan' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:pelanggans',
-            'password' => 'required|string|min:8|confirmed',
-            'alamat' => 'required|string',
-            'nomor_whatsapp' => 'required|string'
-        ]);
 
         $pelanggan = Pelanggan::create([
             'nama_pemesan' => $validatedData['nama_pemesan'],

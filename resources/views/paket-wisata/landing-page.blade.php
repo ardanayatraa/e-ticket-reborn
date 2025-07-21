@@ -868,7 +868,7 @@
 
                 <form id="formRegister" class="space-y-6">
                     @csrf
-                    <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                    <!-- <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response"> -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
                         <input type="text" name="nama_pemesan" required
