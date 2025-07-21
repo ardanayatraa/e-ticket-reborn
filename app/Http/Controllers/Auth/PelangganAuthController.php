@@ -40,13 +40,21 @@ class PelangganAuthController extends Controller
 
     public function register(Request $request)
     {
+        // Manual captcha verification first
+        $captchaResponse = $request->input('g-recaptcha-response');
+        
+        if (empty($captchaResponse) || !NoCaptcha::verifyResponse($captchaResponse)) {
+            return back()->withErrors([
+                'captcha' => 'Please complete the captcha verification.'
+            ])->withInput();
+        }
+
         $validatedData = $request->validate([
             'nama_pemesan' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:pelanggans',
             'password' => 'required|string|min:8|confirmed',
             'alamat' => 'required|string',
-            'nomor_whatsapp' => 'required|string',
-            'g-recaptcha-response' => 'required|captcha'
+            'nomor_whatsapp' => 'required|string'
         ]);
 
         $pelanggan = Pelanggan::create([
