@@ -463,6 +463,7 @@
 </head>
 
 <body class="bg-gray-50">
+<pre>{{ json_encode($mobil) }}</pre>
     <!-- Navigation -->
     <nav class="bg-white shadow-lg fixed w-full z-10">
         <div class="container mx-auto px-4 py-3 flex items-center justify-between">
