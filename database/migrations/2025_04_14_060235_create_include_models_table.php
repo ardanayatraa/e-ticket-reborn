@@ -14,14 +14,16 @@ return new class extends Migration
         Schema::create('includes', function (Blueprint $table) {
             $table->id('include_id');
             $table->unsignedBigInteger('paketwisata_id');
-            $table->string('bensin', 225);
-            $table->string('parkir', 225);
-            $table->string('sopir', 225);
-            $table->string('makan_siang', 225);
-            $table->string('makan_malam', 225);
-            $table->string('tiket_masuk', 225);
-            $table->boolean('status_ketersediaan');
+            $table->boolean('bensin')->default(false);
+            $table->boolean('parkir')->default(false);
+            $table->boolean('sopir')->default(false);
+            $table->boolean('makan_siang')->default(false);
+            $table->boolean('makan_malam')->default(false);
+            $table->boolean('tiket_masuk')->default(false);
+            $table->boolean('status_ketersediaan')->default(true);
             $table->timestamps();
+            
+            $table->foreign('paketwisata_id')->references('paketwisata_id')->on('paket_wisatas')->onDelete('cascade');
         });
 
     }

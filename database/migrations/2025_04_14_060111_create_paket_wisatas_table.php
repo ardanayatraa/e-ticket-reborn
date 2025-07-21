@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('paket_wisatas', function (Blueprint $table) {
             $table->id('paketwisata_id');
             $table->string('judul', 255);
-            $table->string('foto', 255);
+            $table->string('foto', 255)->nullable();
             $table->string('deskripsi', 255);
             $table->string('tempat', 255);
             $table->string('durasi', 100);

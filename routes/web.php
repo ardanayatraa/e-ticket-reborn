@@ -40,14 +40,14 @@ Route::middleware([
 
     Route::resource('admin', AdminController::class);
 
-    // Paket Wisata Routes - PERBAIKAN: Gunakan primary key untuk model binding
+    // Paket Wisata Routes - Menggunakan slug untuk SEO-friendly URLs
        Route::prefix('paket-wisata')->name('paket-wisata.')->group(function () {
         Route::get('/', [PaketWisataController::class, 'index'])->name('index');
         Route::get('/create', [PaketWisataController::class, 'create'])->name('create');
         Route::post('/', [PaketWisataController::class, 'store'])->name('store');
-        Route::get('/{id}/edit', [PaketWisataController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [PaketWisataController::class, 'update'])->name('update');
-        Route::delete('/{id}', [PaketWisataController::class, 'destroy'])->name('destroy');
+        Route::get('/{slug}/edit', [PaketWisataController::class, 'edit'])->name('edit');
+        Route::put('/{slug}', [PaketWisataController::class, 'update'])->name('update');
+        Route::delete('/{slug}', [PaketWisataController::class, 'destroy'])->name('destroy');
        });
 
     Route::resource('pelanggan', PelangganController::class);

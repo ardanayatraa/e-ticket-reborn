@@ -21,8 +21,7 @@ class PaketWisata extends Model
         'harga',
         'foto',
         'gallery',
-        'slug',
-        'max_duration'
+        'slug'
     ];
 
     protected $casts = [

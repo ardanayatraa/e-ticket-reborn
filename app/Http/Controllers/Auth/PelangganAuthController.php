@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Anhskohbo\NoCaptcha\Facades\NoCaptcha;
 
 class PelangganAuthController extends Controller
 {
@@ -45,7 +46,8 @@ class PelangganAuthController extends Controller
             'email' => 'required|string|email|max:255|unique:pelanggans',
             'password' => 'required|string|min:8|confirmed',
             'alamat' => 'required|string',
-            'nomor_whatsapp' => 'required|string'
+            'nomor_whatsapp' => 'required|string',
+            'g-recaptcha-response' => 'required|captcha'
         ]);
 
         if ($validator->fails()) {

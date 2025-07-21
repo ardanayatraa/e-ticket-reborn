@@ -37,10 +37,10 @@
                             {{-- Judul --}}
                             <div>
                                 <label for="judul" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Judul<span class="text-red-500">*</span>
+                                    Judul
                                 </label>
                                 <input id="judul" name="judul" type="text"
-                                    value="{{ old('judul', $paketwisata->judul) }}" required
+                                    value="{{ old('judul', $paketwisata->judul) }}"
                                     placeholder="Masukkan judul paket"
                                     class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                            focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
@@ -49,10 +49,10 @@
                             {{-- Tempat --}}
                             <div>
                                 <label for="tempat" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Tempat<span class="text-red-500">*</span>
+                                    Tempat
                                 </label>
                                 <input id="tempat" name="tempat" type="text"
-                                    value="{{ old('tempat', $paketwisata->tempat) }}" required
+                                    value="{{ old('tempat', $paketwisata->tempat) }}"
                                     placeholder="Masukkan lokasi wisata"
                                     class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                            focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
@@ -61,24 +61,11 @@
                             {{-- Durasi --}}
                             <div>
                                 <label for="durasi" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Durasi (hari)<span class="text-red-500">*</span>
+                                    Durasi (hari)
                                 </label>
                                 <input id="durasi" name="durasi" type="number"
-                                    value="{{ old('durasi', $paketwisata->durasi) }}" required min="1"
+                                    value="{{ old('durasi', $paketwisata->durasi) }}" min="1"
                                     placeholder="Contoh: 3"
-                                    class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
-                                           focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
-                            </div>
-
-                            {{-- Max Duration --}}
-                            <div>
-                                <label for="max_duration"
-                                    class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Durasi Maksimal (jam)<span class="text-red-500">*</span>
-                                </label>
-                                <input id="max_duration" name="max_duration" type="number"
-                                    value="{{ old('max_duration', $paketwisata->max_duration) }}" required
-                                    min="1" max="9" placeholder="Maksimal 9 jam"
                                     class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                            focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
                             </div>
@@ -86,10 +73,10 @@
                             {{-- Harga --}}
                             <div class="md:col-span-2">
                                 <label for="harga" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Harga (Rp)<span class="text-red-500">*</span>
+                                    Harga (Rp)
                                 </label>
                                 <input id="harga" name="harga" type="number"
-                                    value="{{ old('harga', $paketwisata->harga) }}" required step="0.01"
+                                    value="{{ old('harga', $paketwisata->harga) }}" step="0.01"
                                     placeholder="Masukkan harga paket"
                                     class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                            focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition" />
@@ -98,9 +85,9 @@
                             {{-- Deskripsi --}}
                             <div class="md:col-span-2">
                                 <label for="deskripsi" class="block font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                    Deskripsi<span class="text-red-500">*</span>
+                                    Deskripsi
                                 </label>
-                                <textarea id="deskripsi" name="deskripsi" rows="4" required placeholder="Masukkan deskripsi paket"
+                                <textarea id="deskripsi" name="deskripsi" rows="4" placeholder="Masukkan deskripsi paket"
                                     class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">{{ old('deskripsi', $paketwisata->deskripsi) }}</textarea>
                             </div>
                         </div>
@@ -139,7 +126,7 @@
 
                                         <input type="checkbox" id="include_{{ $field }}"
                                             name="include[{{ $field }}]" value="1"
-                                            @if (old("include.$field", $paketwisata->include->$field ?? 0)) checked @endif
+                                            @if (old("include.$field", $paketwisata->include->$field ?? false)) checked @endif
                                             class="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500 mr-3">
 
                                         <span class="text-2xl mr-3">{{ $data['icon'] }}</span>
@@ -296,16 +283,6 @@
                 }
                 reader.readAsDataURL(file);
             });
-        });
-
-        // Validate max_duration (now in hours, not related to durasi in days)
-        document.getElementById('max_duration').addEventListener('change', function() {
-            const maxDuration = parseInt(this.value);
-
-            if (maxDuration < 1 || maxDuration > 9) {
-                this.value = Math.max(1, Math.min(9, maxDuration));
-                alert('Durasi maksimal harus antara 1-9 jam!');
-            }
         });
     </script>
 </x-app-layout>

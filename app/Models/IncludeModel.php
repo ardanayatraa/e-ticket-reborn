@@ -22,6 +22,16 @@ class IncludeModel extends Model
         'status_ketersediaan'
     ];
 
+    protected $casts = [
+        'bensin' => 'boolean',
+        'parkir' => 'boolean',
+        'sopir' => 'boolean',
+        'makan_siang' => 'boolean',
+        'makan_malam' => 'boolean',
+        'tiket_masuk' => 'boolean',
+        'status_ketersediaan' => 'boolean',
+    ];
+
     public function paketWisata()
     {
         return $this->belongsTo(PaketWisata::class, 'paketwisata_id', 'paketwisata_id');

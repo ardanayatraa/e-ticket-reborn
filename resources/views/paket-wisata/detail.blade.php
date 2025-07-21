@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
+    <!-- reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <!-- Midtrans Snap -->
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
     </script>
@@ -833,6 +835,7 @@
 
                 <form id="formRegister" class="space-y-6">
                     @csrf
+                    <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
                         <input type="text" name="nama_pemesan" required
@@ -867,6 +870,11 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password</label>
                         <input type="password" name="password_confirmation" required
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+
+                    <!-- reCAPTCHA -->
+                    <div class="flex justify-center">
+                        <div class="g-recaptcha" data-sitekey="6LcXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></div>
                     </div>
 
                     <button type="submit" id="tombolRegister"
@@ -1809,7 +1817,18 @@
         document.getElementById('formRegister').addEventListener('submit', async function(e) {
             e.preventDefault();
 
+            // Validate reCAPTCHA
+            const recaptchaResponse = grecaptcha.getResponse();
+            if (!recaptchaResponse) {
+                const registerError = document.getElementById('registerError');
+                registerError.querySelector('p').textContent = 'Silakan lengkapi CAPTCHA terlebih dahulu.';
+                registerError.classList.remove('hidden');
+                return;
+            }
+
             const formData = new FormData(this);
+            formData.set('g-recaptcha-response', recaptchaResponse);
+            
             const tombolRegister = document.getElementById('tombolRegister');
             const registerError = document.getElementById('registerError');
 
@@ -1833,10 +1852,12 @@
                     registerError.querySelector('p').textContent = data.message ||
                         'Terjadi kesalahan saat mendaftar.';
                     registerError.classList.remove('hidden');
+                    grecaptcha.reset();
                 }
             } catch (error) {
                 registerError.querySelector('p').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
                 registerError.classList.remove('hidden');
+                grecaptcha.reset();
             } finally {
                 tombolRegister.disabled = false;
                 tombolRegister.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Daftar';
