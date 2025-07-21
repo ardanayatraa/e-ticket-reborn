@@ -7,7 +7,6 @@ use App\Models\Pelanggan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Anhskohbo\NoCaptcha\Facades\NoCaptcha;
 
 class PelangganAuthController extends Controller
@@ -41,7 +40,7 @@ class PelangganAuthController extends Controller
 
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validatedData = $request->validate([
             'nama_pemesan' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:pelanggans',
             'password' => 'required|string|min:8|confirmed',
@@ -50,16 +49,12 @@ class PelangganAuthController extends Controller
             'g-recaptcha-response' => 'required|captcha'
         ]);
 
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
         $pelanggan = Pelanggan::create([
-            'nama_pemesan' => $request->nama_pemesan,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'alamat' => $request->alamat,
-            'nomor_whatsapp' => $request->nomor_whatsapp,
+            'nama_pemesan' => $validatedData['nama_pemesan'],
+            'email' => $validatedData['email'],
+            'password' => Hash::make($validatedData['password']),
+            'alamat' => $validatedData['alamat'],
+            'nomor_whatsapp' => $validatedData['nomor_whatsapp'],
         ]);
 
         Auth::guard('pelanggan')->login($pelanggan);
