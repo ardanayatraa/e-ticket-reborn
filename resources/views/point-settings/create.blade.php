@@ -155,16 +155,9 @@
             const discountDiv = document.getElementById('preview-discount');
 
             if (minTransaksi > 0 && jumlahPoint > 0) {
-                // Calculate for 1M transaction
-                const transactionAmount = 1000000;
-                const earnedPoints = Math.floor(transactionAmount / minTransaksi) * jumlahPoint;
-                
                 calculationDiv.innerHTML = `
-                    <p><strong>Transaksi Rp 1.000.000:</strong></p>
-                    <p>Point yang didapat: <strong>${earnedPoints} point</strong></p>
-                    <p class="text-xs text-gray-500">
-                        Perhitungan: 1.000.000 ÷ ${minTransaksi.toLocaleString('id-ID')} × ${jumlahPoint} = ${earnedPoints} point
-                    </p>
+                    <p><strong>Setiap transaksi minimal Rp ${minTransaksi.toLocaleString('id-ID')}:</strong></p>
+                    <p>Point yang didapat: <strong>${jumlahPoint} point</strong></p>
                 `;
             } else {
                 calculationDiv.innerHTML = 'Masukkan data untuk melihat preview';

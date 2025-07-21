@@ -69,13 +69,6 @@
                         <span class="ml-2">Sopir</span>
                     </a>
 
-                    {{-- Pemesanan --}}
-                    <a href="{{ route('pemesanan.index') }}"
-                        class="flex items-center px-4 py-3 {{ request()->routeIs('pemesanan.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white transition' }}">
-                        <i class="fas fa-calendar-check w-6"></i>
-                        <span class="ml-2">Pemesanan</span>
-                    </a>
-
                     {{-- Pelanggan --}}
                     <a href="{{ route('pelanggan.index') }}"
                         class="flex items-center px-4 py-3 {{ request()->routeIs('pelanggan.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white transition' }}">
@@ -182,13 +175,6 @@
                         class="flex items-center px-4 py-3 {{ request()->routeIs('sopir.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white transition' }}">
                         <i class="fas fa-user-tie w-6"></i>
                         <span class="ml-2">Sopir</span>
-                    </a>
-
-                    {{-- Pemesanan --}}
-                    <a href="{{ route('pemesanan.index') }}"
-                        class="flex items-center px-4 py-3 {{ request()->routeIs('pemesanan.*') ? 'bg-gray-700 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white transition' }}">
-                        <i class="fas fa-calendar-check w-6"></i>
-                        <span class="ml-2">Pemesanan</span>
                     </a>
 
                     {{-- Pelanggan --}}

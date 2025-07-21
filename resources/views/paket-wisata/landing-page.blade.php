@@ -963,8 +963,7 @@
                                 @endphp
                                 <li class="flex items-center">
                                     <i class="fas fa-calculator text-blue-600 mr-2"></i>
-                                    Setiap Rp {{ number_format($firstSetting->minimum_transaksi, 0, ',', '.') }}
-                                    = {{ $firstSetting->jumlah_point_diperoleh }} poin
+                                    Setiap transaksi minimal Rp {{ number_format($firstSetting->minimum_transaksi, 0, ',', '.') }} dapat {{ $firstSetting->jumlah_point_diperoleh }} poin
                                 </li>
                                 <li class="flex items-center">
                                     <i class="fas fa-tags text-blue-600 mr-2"></i>
