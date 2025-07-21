@@ -60,7 +60,7 @@ class TransaksiTable extends DataTableComponent
                 ->sortable()
                 ->format(fn($v, $row) => optional($row->paketWisata)->judul ?? '-'),
 
-            Column::make('Pemesan', 'pemesan_id')
+            Column::make('Pemesan', 'pelanggan_id')
                 ->sortable()
                 ->format(fn($v, $row) => optional($row->pelanggan)->nama_pemesan ?? '-'),
 
