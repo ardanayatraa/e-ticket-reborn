@@ -187,4 +187,18 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | reCAPTCHA Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Google reCAPTCHA configuration for forms
+    |
+    */
+
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY', ''),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY', ''),
+    ],
+
 ];
