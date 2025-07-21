@@ -32,7 +32,7 @@ class TransaksiLaporanTable extends DataTableComponent
 
     public function builder(): Builder
     {
-        return Transaksi::with(['paketWisata', 'pelanggan', 'pemesanan.mobil'])
+        return Transaksi::with(['paketWisata', 'pelanggan', 'ketersediaan.mobil'])
             ->whereIn('transaksi_status', ['paid', 'confirmed'])
             ->orderBy('updated_at', 'desc');
     }
@@ -50,9 +50,9 @@ class TransaksiLaporanTable extends DataTableComponent
                 ->sortable()
                 ->format(fn($v, $row) => optional($row->pelanggan)->nama_pemesan ?? '-'),
 
-            Column::make("Mobil", "pemesanan_id")
+            Column::make("Mobil", "terpesan_id")
                 ->sortable()
-                ->format(fn($v, $row) => optional($row->pemesanan->mobil)->nama_kendaraan ?? '-'),
+                ->format(fn($v, $row) => optional($row->ketersediaan->mobil)->nama_kendaraan ?? '-'),
 
             Column::make("Jenis Transaksi", "jenis_transaksi")->sortable(),
 
