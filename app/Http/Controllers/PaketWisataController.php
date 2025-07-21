@@ -321,43 +321,67 @@ class PaketWisataController extends Controller
     }
 
     /**
-     * Check availability of mobil for specific date
-     */
-    public function check(Request $request): JsonResponse
-    {
-        try {
-            $date = $request->query('date');
-            
-            if (!$date) {
-                return response()->json(['error' => 'Date parameter is required'], 400);
-            }
+ * Check availability of mobil for specific date
+ */
+public function check(Request $request): JsonResponse
+{
+    try {
+        // Validasi input
+        $validator = Validator::make($request->all(), [
+            'date' => 'required|date|after_or_equal:today'
+        ]);
 
-            $currentTime = Carbon::now();
-            $requestDate = Carbon::parse($date);
-
-            // Cek pembatasan waktu booking untuk besok
-            $tomorrow = Carbon::tomorrow();
-            if ($requestDate->isSameDay($tomorrow) && $currentTime->hour >= 17) {
-                return response()->json([]);
-            }
-
-            // Get taken mobil IDs from various sources
-            $takenMobilIds = $this->getTakenMobilIds($date);
-
-            // Get available mobil
-            $available = Mobil::whereNotIn('mobil_id', $takenMobilIds)->get();
-
-            return response()->json($available->pluck('mobil_id'));
-            
-        } catch (\Exception $e) {
-            Log::error('Error checking mobil availability: ' . $e->getMessage(), [
-                'date' => $request->query('date'),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            return response()->json(['error' => 'Terjadi kesalahan saat mengecek ketersediaan'], 500);
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Invalid input',
+                'details' => $validator->errors()
+            ], 400);
         }
+
+        $date = $request->query('date');
+        $currentTime = Carbon::now();
+        $requestDate = Carbon::parse($date);
+
+        // Cek pembatasan waktu booking untuk besok
+        $tomorrow = Carbon::tomorrow();
+        if ($requestDate->isSameDay($tomorrow) && $currentTime->hour >= 17) {
+            return response()->json([
+                'available_mobil_ids' => [],
+                'message' => 'Booking untuk besok sudah ditutup setelah jam 17:00'
+            ]);
+        }
+
+        // Get taken mobil IDs from various sources
+        $takenMobilIds = $this->getTakenMobilIds($date);
+
+        // Get available mobil dengan handling yang lebih baik
+        $availableQuery = Mobil::query();
+        
+        if (!empty($takenMobilIds)) {
+            $availableQuery->whereNotIn('mobil_id', array_values($takenMobilIds));
+        }
+
+        $available = $availableQuery->get();
+
+        return response()->json([
+            'available_mobil_ids' => $available->pluck('mobil_id'),
+            'total_available' => $available->count(),
+            'date' => $date
+        ]);
+        
+    } catch (\Exception $e) {
+        Log::error('Error checking mobil availability: ' . $e->getMessage(), [
+            'date' => $request->query('date'),
+            'request_data' => $request->all(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'error' => 'Terjadi kesalahan saat mengecek ketersediaan',
+            'message' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+        ], 500);
     }
+}
 
     /**
      * Generate unique slug for paket wisata
@@ -456,45 +480,57 @@ class PaketWisataController extends Controller
         }
     }
 
-    /**
-     * Get taken mobil IDs for specific date
-     */
     private function getTakenMobilIds(string $date): array
     {
-        // From Ketersediaan table
-        $takenFromKetersediaan = Ketersediaan::whereDate('tanggal_keberangkatan', $date)
-            ->pluck('mobil_id')
-            ->toArray();
-
-        // From confirmed transactions
-        $takenFromTransaksiConfirmed = Transaksi::whereHas('pemesanan', function ($q) use ($date) {
-                $q->whereDate('tanggal_keberangkatan', $date);
-            })
-            ->whereIn('transaksi_status', ['paid', 'confirmed'])
-            ->with('pemesanan')
-            ->get()
-            ->pluck('pemesanan.mobil_id')
-            ->filter()
-            ->toArray();
-
-        // From pending transactions (hold for 4 hours)
-        $fourHoursAgo = Carbon::now()->subHours(4);
-        $takenFromHold = Transaksi::whereHas('pemesanan', function ($q) use ($date) {
-                $q->whereDate('tanggal_keberangkatan', $date);
-            })
-            ->where('transaksi_status', 'pending')
-            ->where('created_at', '>=', $fourHoursAgo)
-            ->with('pemesanan')
-            ->get()
-            ->pluck('pemesanan.mobil_id')
-            ->filter()
-            ->toArray();
-
-        return array_unique(array_merge(
-            $takenFromKetersediaan,
-            $takenFromTransaksiConfirmed,
-            $takenFromHold
-        ));
+        try {
+            // From Ketersediaan table
+            $takenFromKetersediaan = Ketersediaan::whereDate('tanggal_keberangkatan', $date)
+                ->whereNotNull('mobil_id')
+                ->pluck('mobil_id')
+                ->filter()
+                ->toArray();
+    
+            // From confirmed transactions
+            $takenFromTransaksiConfirmed = Transaksi::whereHas('pemesanan', function ($q) use ($date) {
+                    $q->whereDate('tanggal_keberangkatan', $date)
+                      ->whereNotNull('mobil_id');
+                })
+                ->whereIn('transaksi_status', ['paid', 'confirmed'])
+                ->with('pemesanan')
+                ->get()
+                ->pluck('pemesanan.mobil_id')
+                ->filter()
+                ->toArray();
+    
+            // From pending transactions (hold for 4 hours)
+            $fourHoursAgo = Carbon::now()->subHours(4);
+            $takenFromHold = Transaksi::whereHas('pemesanan', function ($q) use ($date) {
+                    $q->whereDate('tanggal_keberangkatan', $date)
+                      ->whereNotNull('mobil_id');
+                })
+                ->where('transaksi_status', 'pending')
+                ->where('created_at', '>=', $fourHoursAgo)
+                ->with('pemesanan')
+                ->get()
+                ->pluck('pemesanan.mobil_id')
+                ->filter()
+                ->toArray();
+    
+            $result = array_unique(array_merge(
+                $takenFromKetersediaan,
+                $takenFromTransaksiConfirmed,
+                $takenFromHold
+            ));
+    
+            // Remove any null values
+            return array_values(array_filter($result, function($id) {
+                return !is_null($id);
+            }));
+    
+        } catch (\Exception $e) {
+            Log::error('Error getting taken mobil IDs: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
