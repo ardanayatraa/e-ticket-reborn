@@ -873,11 +873,9 @@
                     </div>
 
                     <!-- reCAPTCHA -->
-                    @if(config('app.recaptcha.site_key'))
-                        <div class="flex justify-center">
-                            <div class="g-recaptcha" data-sitekey="{{ config('app.recaptcha.site_key') }}"></div>
-                        </div>
-                    @endif
+                    <div class="flex justify-center">
+                        <div class="g-recaptcha" data-sitekey="{{ config('app.recaptcha.site_key') }}"></div>
+                    </div>
 
                     <button type="submit" id="tombolRegister"
                         class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200">
