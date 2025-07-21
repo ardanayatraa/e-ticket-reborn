@@ -155,13 +155,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Discount Preview -->
-                        <div id="discount-preview" class="mt-6 hidden">
-                            <h4 class="text-md font-semibold text-gray-800 mb-3">Preview Diskon Point</h4>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="discount-grid">
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -174,7 +167,6 @@
             
             if (!transactionAmount || transactionAmount < 10000) {
                 document.getElementById('preview-results').innerHTML = '<div class="text-sm text-gray-600">Masukkan jumlah transaksi minimal Rp 10.000</div>';
-                document.getElementById('discount-preview').classList.add('hidden');
                 return;
             }
 
@@ -211,30 +203,13 @@
                             </div>
                         </div>
                     `;
-
-                    // Update discount preview
-                    const discountGrid = document.getElementById('discount-grid');
-                    discountGrid.innerHTML = '';
-                    
-                    data.discounts.forEach(discount => {
-                        discountGrid.innerHTML += `
-                            <div class="bg-white p-3 rounded border text-center">
-                                <div class="text-lg font-semibold text-teal-600">${discount.points} Point</div>
-                                <div class="text-sm text-gray-600">= ${discount.formatted_discount}</div>
-                            </div>
-                        `;
-                    });
-
-                    document.getElementById('discount-preview').classList.remove('hidden');
                 } else {
                     document.getElementById('preview-results').innerHTML = `<div class="text-sm text-red-600">${data.message}</div>`;
-                    document.getElementById('discount-preview').classList.add('hidden');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('preview-results').innerHTML = '<div class="text-sm text-red-600">Terjadi kesalahan saat menghitung preview</div>';
-                document.getElementById('discount-preview').classList.add('hidden');
             });
         }
     </script>

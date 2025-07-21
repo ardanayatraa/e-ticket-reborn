@@ -120,12 +120,6 @@
                                         Masukkan data untuk melihat preview
                                     </div>
                                 </div>
-                                <div class="space-y-2">
-                                    <p class="text-gray-700 font-medium">Contoh Diskon:</p>
-                                    <div id="preview-discount" class="text-teal-600">
-                                        Masukkan data untuk melihat preview
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
