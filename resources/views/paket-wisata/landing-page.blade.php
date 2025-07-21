@@ -2532,6 +2532,11 @@
         }
 
         function cekKetersediaanKendaraan(tanggal) {
+            // Patch: pastikan format tanggal YYYY-MM-DD
+            if (typeof tanggal === 'string' && tanggal.includes('/')) {
+                // Ubah 2025/07/21 menjadi 2025-07-21
+                tanggal = tanggal.replaceAll('/', '-');
+            }
             resetPilihanKendaraan();
             const indikatorLoadingTanggal = document.getElementById('indikatorLoadingTanggal');
             indikatorLoadingTanggal.classList.remove('hidden');
