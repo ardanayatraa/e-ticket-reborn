@@ -870,9 +870,9 @@
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     </div>
 
-                    <!-- reCAPTCHA -->
-                    <div class="flex justify-center">
-                        <div class="g-recaptcha" data-sitekey="{{ config('app.recaptcha.site_key') }}"></div>
+                    <div class="mb-4 flex justify-center">
+                        <div class="g-recaptcha" data-sitekey="{{ env('NOCAPTCHA_SITEKEY') }}"></div>
+                        <span id="recaptchaError" class="text-red-500 text-xs mt-2 block" style="display:none"></span>
                     </div>
 
                     <button type="submit" id="tombolRegister"
@@ -1813,6 +1813,17 @@
 
         // Register form handler
         document.getElementById('formRegister').addEventListener('submit', async function(e) {
+            const recaptchaResponse = grecaptcha.getResponse();
+            const recaptchaError = document.getElementById('recaptchaError');
+            if (!recaptchaResponse) {
+                e.preventDefault();
+                recaptchaError.textContent = 'Silakan centang reCAPTCHA terlebih dahulu.';
+                recaptchaError.style.display = 'block';
+                return;
+            } else {
+                recaptchaError.textContent = '';
+                recaptchaError.style.display = 'none';
+            }
             e.preventDefault();
 
             const formData = new FormData(this);

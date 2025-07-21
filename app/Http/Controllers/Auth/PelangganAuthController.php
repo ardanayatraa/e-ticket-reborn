@@ -41,20 +41,13 @@ class PelangganAuthController extends Controller
     public function register(Request $request)
     {
         try {
-            // NONAKTIFKAN CAPTCHA
-            // $captchaResponse = $request->input('g-recaptcha-response');
-            // if (empty($captchaResponse)) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Silakan lengkapi CAPTCHA terlebih dahulu.'
-            //     ], 422);
-            // }
-            // if (!NoCaptcha::verifyResponse($captchaResponse)) {
-            //     return response()->json([
-            //         'success' => false,
-            //         'message' => 'Verifikasi CAPTCHA gagal. Silakan coba lagi.'
-            //     ], 422);
-            // }
+            $captchaResponse = $request->input('g-recaptcha-response');
+            if (empty($captchaResponse)) {
+                return back()->withErrors(['g-recaptcha-response' => 'Silakan lengkapi CAPTCHA terlebih dahulu.'])->withInput();
+            }
+            if (!NoCaptcha::verifyResponse($captchaResponse)) {
+                return back()->withErrors(['g-recaptcha-response' => 'Verifikasi CAPTCHA gagal. Silakan coba lagi.'])->withInput();
+            }
             $validatedData = $request->validate([
                 'nama_pemesan' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:pelanggans',

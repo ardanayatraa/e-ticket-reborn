@@ -77,6 +77,13 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                 </div>
 
+                <div class="mb-4 flex justify-center">
+                    <div class="g-recaptcha" data-sitekey="{{ env('NOCAPTCHA_SITEKEY') }}"></div>
+                    @if ($errors->has('g-recaptcha-response'))
+                        <span class="text-red-500 text-xs mt-2 block">{{ $errors->first('g-recaptcha-response') }}</span>
+                    @endif
+                </div>
+
                 <button type="submit"
                     class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200">
                     <i class="fas fa-user-plus mr-2"></i>
