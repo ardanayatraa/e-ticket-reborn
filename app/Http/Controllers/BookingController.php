@@ -34,28 +34,19 @@ class BookingController extends Controller
                 return response()->json(['message' => 'Transaction not found'], 404);
             }
 
-            // Update transaction status
-            $transaksi->update([
-                'transaksi_status' => 'paid',
-                'deposit' => $result['gross_amount'] ?? $transaksi->total_transaksi,
-            ]);
-
-            // --- SOLUSI: Update semua transaksi terkait booking multiple mobil ---
-            // Ambil info penting
+            // --- UPDATE: Update semua transaksi terkait booking multiple mobil ---
             $pelangganId = $transaksi->pelanggan_id;
             $paketWisataId = $transaksi->paketwisata_id;
-            $paidDeposit = $transaksi->deposit;
             $createdAt = $transaksi->created_at;
+            $tanggalKeberangkatan = $transaksi->ketersediaan ? $transaksi->ketersediaan->tanggal_keberangkatan : null;
 
-            // Ambil tanggal keberangkatan dari relasi pemesanan
-            $tanggalKeberangkatan = $transaksi->pemesanan ? $transaksi->pemesanan->tanggal_keberangkatan : null;
-
+            $relatedTransaksi = collect();
             if ($tanggalKeberangkatan) {
-                // Update semua transaksi yang pending, user & paket & tanggal sama, dibuat dalam 1 menit
-                $relatedTransaksi = \App\Models\Transaksi::where('pelanggan_id', $pelangganId)
+                // Ambil semua transaksi yang pending, user & paket & tanggal sama, dibuat dalam 1 menit
+                $relatedTransaksi = Transaksi::where('pelanggan_id', $pelangganId)
                     ->where('paketwisata_id', $paketWisataId)
                     ->where('transaksi_status', 'pending')
-                    ->whereHas('pemesanan', function($q) use ($tanggalKeberangkatan) {
+                    ->whereHas('ketersediaan', function($q) use ($tanggalKeberangkatan) {
                         $q->whereDate('tanggal_keberangkatan', $tanggalKeberangkatan);
                     })
                     ->whereBetween('created_at', [
@@ -63,21 +54,26 @@ class BookingController extends Controller
                         $createdAt->copy()->addMinute()
                     ])
                     ->get();
-
-                foreach ($relatedTransaksi as $trx) {
-                    $trx->update([
-                        'transaksi_status' => 'paid',
-                        'deposit' => $paidDeposit, // atau bisa disesuaikan jika ingin split deposit
-                    ]);
-                    \App\Jobs\SendTicketJob::dispatch($trx);
-                }
             }
-            // --- END SOLUSI ---
 
-            // Kirim tiket untuk transaksi utama
-            SendTicketJob::dispatch($transaksi);
+            // Jika tidak ketemu, update transaksi utama saja
+            if ($relatedTransaksi->isEmpty()) {
+                $relatedTransaksi = collect([$transaksi]);
+            }
 
-            // Points will be added automatically by observer when status changes to 'paid'
+            // Hitung deposit per transaksi jika gross_amount ada
+            $depositPerTransaksi = null;
+            if (isset($result['gross_amount']) && $relatedTransaksi->count() > 0) {
+                $depositPerTransaksi = $result['gross_amount'] / $relatedTransaksi->count();
+            }
+
+            foreach ($relatedTransaksi as $trx) {
+                $trx->update([
+                    'transaksi_status' => 'paid',
+                    'deposit' => $depositPerTransaksi !== null ? $depositPerTransaksi : ($result['gross_amount'] ?? $trx->total_transaksi),
+                ]);
+                SendTicketJob::dispatch($trx);
+            }
 
             return response()->json([
                 'success' => true,
