@@ -65,7 +65,7 @@ class PointSetting extends Model
     }
 
     /**
-     * Calculate points earned for a transaction amount
+     * Calculate points earned for a transaction amount (per transaction, not multiplier)
      */
     public static function calculateEarnedPoints($transactionAmount)
     {
@@ -75,11 +75,12 @@ class PointSetting extends Model
             return 0;
         }
 
-        return floor($transactionAmount / $setting->minimum_transaksi) * $setting->jumlah_point_diperoleh;
+        // Per transaksi, bukan kelipatan
+        return $setting->jumlah_point_diperoleh;
     }
 
     /**
-     * Calculate discount amount for given points
+     * Calculate discount amount for given points (per transaction, not multiplier)
      */
     public static function calculateDiscount($points)
     {
@@ -91,12 +92,18 @@ class PointSetting extends Model
 
         // Use the first active setting for discount calculation
         $setting = $activeSettings->first();
-        $discountBatches = floor($points / $setting->jumlah_point_diperoleh);
-        return $discountBatches * $setting->harga_satuan_point;
+        
+        // Per transaksi, bukan kelipatan
+        // Jika poin mencukupi untuk satu transaksi, berikan diskon
+        if ($points >= $setting->jumlah_point_diperoleh) {
+            return $setting->harga_satuan_point;
+        }
+        
+        return 0;
     }
 
     /**
-     * Get maximum usable points for a given transaction amount
+     * Get maximum usable points for a given transaction amount (per transaction)
      */
     public static function getMaxUsablePoints($transactionAmount)
     {
@@ -108,9 +115,12 @@ class PointSetting extends Model
 
         $setting = $activeSettings->first();
         
-        // Maximum discount should not exceed transaction amount
-        $maxDiscountBatches = floor($transactionAmount / $setting->harga_satuan_point);
-        return $maxDiscountBatches * $setting->jumlah_point_diperoleh;
+        // Per transaksi, maksimal 1 kali diskon
+        if ($transactionAmount >= $setting->harga_satuan_point) {
+            return $setting->jumlah_point_diperoleh;
+        }
+        
+        return 0;
     }
 
     /**

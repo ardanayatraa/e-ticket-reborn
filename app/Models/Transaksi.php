@@ -15,7 +15,7 @@ class Transaksi extends Model
     protected $fillable = [
         'paketwisata_id',
         'pelanggan_id',
-        'pemesanan_id',
+        'terpesan_id',
         'jenis_transaksi',
         'deposit',
         'balance',
@@ -68,46 +68,20 @@ class Transaksi extends Model
     }
 
     /**
-     * Relasi ke Pemesanan
-     */
-    public function pemesanan()
-    {
-        return $this->belongsTo(
-            Pemesanan::class,
-            'pemesanan_id',
-            'pemesanan_id'
-        );
-    }
-
-    /**
-     * Ketersediaan yang dibuat saat status 'paid'
+     * Relasi ke Ketersediaan (sebelumnya Pemesanan)
      */
     public function ketersediaan()
     {
-        return $this->hasOne(
-            \App\Models\Ketersediaan::class,
-            'pemesanan_id',   // FK di tabel ketersediaans
-            'pemesanan_id'    // PK di tabel transaksis
+        return $this->belongsTo(
+            Ketersediaan::class,
+            'terpesan_id',
+            'terpesan_id'
         );
     }
 
-    public function includeModel()
-    {
-        return $this->hasOne(
-            \App\Models\IncludeModel::class,
-            'pemesanan_id',  // foreign key di includes
-            'pemesanan_id'   // local key di transaksis
-        );
-    }
 
-    public function exclude()
-    {
-        return $this->hasOne(
-            \App\Models\Exclude::class,
-            'pemesanan_id',  // foreign key di excludes
-            'pemesanan_id'   // local key di transaksis
-        );
-    }
+
+
 
     /**
      * Accessor untuk total_owe_to_me (dihitung dari owe_to_me)

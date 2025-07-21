@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mobil;
-use App\Models\Pemesanan;
+use App\Models\Ketersediaan;
 use App\Models\Pelanggan;
 use App\Models\PaketWisata;
 use App\Models\Transaksi;
@@ -13,11 +13,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+
 class PemesananController extends Controller
 {
     public function index()
     {
-        $pesanan = Pemesanan::with('pelanggan','paketWisata')->get();
+        $pesanan = Ketersediaan::with('pelanggan','paketWisata')->get();
         return view('pemesanan.index', compact('pesanan'));
     }
 
@@ -77,7 +78,7 @@ class PemesananController extends Controller
             $pelanggan = Auth::guard('pelanggan')->user();
             $paketWisata = PaketWisata::findOrFail($request->paket_id);
             $totalPemesanan = count($request->mobil_ids);
-            $pemesananIds = [];
+            $ketersediaanIds = [];
             $totalHarga = 0;
             $pointsUsed = (int) ($request->points_used ?? 0); // Default 0 jika tidak diisi
             $totalDiscount = 0;
@@ -106,8 +107,8 @@ class PemesananController extends Controller
                 
                 $setting = $activeSettings->first();
                 
-                if ($pointsUsed % $setting->jumlah_point_diperoleh !== 0) {
-                    throw new \Exception("Poin harus dalam kelipatan {$setting->jumlah_point_diperoleh}");
+                if ($pointsUsed !== $setting->jumlah_point_diperoleh) {
+                    throw new \Exception("Poin harus tepat {$setting->jumlah_point_diperoleh} untuk satu transaksi");
                 }
 
                 // Hitung diskon berdasarkan pengaturan
@@ -140,7 +141,8 @@ class PemesananController extends Controller
                 $finalTotal = 0;
                 // Adjust discount jika melebihi total harga
                 $totalDiscount = $totalHarga;
-                $pointsUsed = ($totalDiscount / $discountPerPoints) * $pointsForDiscount; // Recalculate points used
+                // Tetap gunakan poin yang sama karena per transaksi
+                $pointsUsed = $setting->jumlah_point_diperoleh;
             }
 
             // Kurangi poin HANYA jika pelanggan memilih menggunakan poin
@@ -150,27 +152,28 @@ class PemesananController extends Controller
 }
 
 
-            // Loop simpan data pemesanan
+            // Loop simpan data ketersediaan
             foreach ($request->mobil_ids as $index => $mobilId) {
                 $jumlahPeserta = $request->jumlah_peserta[$index];
 
-                $pemesanan = Pemesanan::create([
+                $ketersediaan = Ketersediaan::create([
                     'pelanggan_id'          => $pelanggan->pelanggan_id,
                     'paketwisata_id'        => $request->paket_id,
                     'mobil_id'              => $mobilId,
                     'tanggal_keberangkatan' => $request->tanggal,
                     'jam_mulai'             => $request->jam_mulai,
+                    'status_ketersediaan'   => 'pending',
                 ]);
 
-                $pemesananIds[] = $pemesanan->pemesanan_id;
+                $ketersediaanIds[] = $ketersediaan->terpesan_id;
 
-                // Hitung harga per pemesanan (proporsional dengan diskon)
-                $hargaPemesanan = $paketWisata->harga;
+                // Hitung harga per ketersediaan (proporsional dengan diskon)
+                $hargaKetersediaan = $paketWisata->harga;
                 $discountPerBooking = $totalPemesanan > 1 ? ($totalDiscount / $totalPemesanan) : $totalDiscount;
-                $finalHargaPemesanan = max(0, $hargaPemesanan - $discountPerBooking);
+                $finalHargaKetersediaan = max(0, $hargaKetersediaan - $discountPerBooking);
 
                 // Buat transaksi dengan order_id untuk Midtrans
-                $orderId = 'BOOKING-' . $pemesanan->pemesanan_id . '-' . time();
+                $orderId = 'BOOKING-' . $ketersediaan->terpesan_id . '-' . time();
 
                 // Buat note hanya jika menggunakan poin
                 $note = null;
@@ -181,14 +184,14 @@ class PemesananController extends Controller
                 $transaksi = Transaksi::create([
                     'paketwisata_id'   => $request->paket_id,
                     'pelanggan_id'     => $pelanggan->pelanggan_id,
-                    'pemesanan_id'     => $pemesanan->pemesanan_id,
+                    'terpesan_id'      => $ketersediaan->terpesan_id,
                     'order_id'         => $orderId,
                     'deposit'          => 0, // Akan diisi setelah pembayaran via Midtrans
                     'balance'          => 0,
                     'jumlah_peserta'   => $jumlahPeserta,
                     'owe_to_me'        => 0,
                     'pay_to_provider'  => 0,
-                    'total_transaksi'  => $finalHargaPemesanan, // Harga setelah diskon (jika ada)
+                    'total_transaksi'  => $finalHargaKetersediaan, // Harga setelah diskon (jika ada)
                     'transaksi_status' => 'pending',
                     'additional_charge'=> 0,
                     'note'             => $note,
@@ -198,7 +201,7 @@ class PemesananController extends Controller
             DB::commit();
 
             // Setup Midtrans untuk pembayaran
-            $firstTransaksi = Transaksi::where('pemesanan_id', $pemesananIds[0])->first();
+            $firstTransaksi = Transaksi::where('terpesan_id', $ketersediaanIds[0])->first();
 
             \Midtrans\Config::$serverKey = config('midtrans.server_key');
             \Midtrans\Config::$isProduction = config('midtrans.is_production');
@@ -268,7 +271,7 @@ class PemesananController extends Controller
                     'total_discount' => $totalDiscount,
                     'final_total' => $finalTotal,
                     'points_used' => $pointsUsed,
-                    'pemesanan_ids' => $pemesananIds,
+                    'ketersediaan_ids' => $ketersediaanIds,
                 ]
             ]);
 
@@ -284,43 +287,44 @@ class PemesananController extends Controller
         }
     }
 
-    public function show(Pemesanan $pemesanan)
+    public function show(Ketersediaan $ketersediaan)
     {
-        return view('pemesanan.show', compact('pemesanan'));
+        return view('pemesanan.show', compact('ketersediaan'));
     }
 
-    public function edit(Pemesanan $pemesanan)
+    public function edit(Ketersediaan $ketersediaan)
     {
         $pelanggan = Pelanggan::all();
         $pakets = PaketWisata::all();
         $mobils = Mobil::all();
-        return view('pemesanan.edit', compact('pemesanan','pelanggan','pakets','mobils'));
+        return view('pemesanan.edit', compact('ketersediaan','pelanggan','pakets','mobils'));
     }
 
-    public function update(Request $request, Pemesanan $pemesanan)
+    public function update(Request $request, Ketersediaan $ketersediaan)
     {
         $data = $request->validate([
-            'pemesan_id'            => 'required',
-            'paketwisata_id'        => 'required',
-            'mobil_id'              => 'required',
-            'jam_mulai'             => 'required',
-            'tanggal_keberangkatan' => 'required|date',
+            'pelanggan_id'         => 'required',
+            'paketwisata_id'       => 'required',
+            'mobil_id'             => 'required',
+            'jam_mulai'            => 'required',
+            'tanggal_keberangkatan'=> 'required|date',
+            'status_ketersediaan'  => 'required|string',
         ]);
 
-        $pemesanan->update($data);
+        $ketersediaan->update($data);
         return redirect()->route('pemesanan.index')->with('success', 'Pemesanan updated.');
     }
 
-    public function destroy(Pemesanan $pemesanan)
+    public function destroy(Ketersediaan $ketersediaan)
     {
-        $pemesanan->delete();
+        $ketersediaan->delete();
         return redirect()->route('pemesanan.index')->with('success', 'Pemesanan deleted.');
     }
 
 
     public function download($transaksiId)
 {
-    $transaksi = Transaksi::with('pemesanan', 'pelanggan')->findOrFail($transaksiId);
+    $transaksi = Transaksi::with('ketersediaan', 'pelanggan')->findOrFail($transaksiId);
 
     $pdf = Pdf::loadView('pdf.ticket', compact('transaksi'));
 

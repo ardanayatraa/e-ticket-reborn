@@ -4,31 +4,34 @@
 namespace App\Http\Controllers;
 
 use App\Models\Ketersediaan;
-use App\Models\Pemesanan;
 use App\Models\Mobil;
-use App\Models\Sopir;
+use App\Models\Pelanggan;
+use App\Models\PaketWisata;
 use Illuminate\Http\Request;
 
 class KetersediaanController extends Controller
 {
     public function index()
     {
-        $data = Ketersediaan::with('pemesanan','mobil')->get();
+        $data = Ketersediaan::with('pelanggan','mobil','paketWisata')->get();
         return view('ketersediaan.index', compact('data'));
     }
 
     public function create()
     {
-        $pesanan = Pemesanan::all();
+        $pelanggan = Pelanggan::all();
         $mobils  = Mobil::all();
-        return view('ketersediaan.create', compact('pesanan','mobils'));
+        $paketWisata = PaketWisata::all();
+        return view('ketersediaan.create', compact('pelanggan','mobils','paketWisata'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'pemesanan_id'         => 'required|exists:pemesanans,pemesanan_id',
+            'pelanggan_id'         => 'required|exists:pelanggans,pelanggan_id',
+            'paketwisata_id'       => 'required|exists:paket_wisatas,paketwisata_id',
             'mobil_id'             => 'required|exists:mobils,mobil_id',
+            'jam_mulai'            => 'required',
             'tanggal_keberangkatan'=> 'required|date',
             'status_ketersediaan'  => 'required|string',
         ]);
@@ -44,15 +47,21 @@ class KetersediaanController extends Controller
 
     public function edit(Ketersediaan $ketersediaan)
     {
-        $pesanan = Pemesanan::all();
+        $pelanggan = Pelanggan::all();
         $mobils  = Mobil::all();
-        return view('ketersediaan.edit', compact('ketersediaan','pesanan','mobils'));
+        $paketWisata = PaketWisata::all();
+        return view('ketersediaan.edit', compact('ketersediaan','pelanggan','mobils','paketWisata'));
     }
 
     public function update(Request $request, Ketersediaan $ketersediaan)
     {
         $data = $request->validate([
-            'status_ketersediaan' => 'required|string',
+            'pelanggan_id'         => 'required|exists:pelanggans,pelanggan_id',
+            'paketwisata_id'       => 'required|exists:paket_wisatas,paketwisata_id',
+            'mobil_id'             => 'required|exists:mobils,mobil_id',
+            'jam_mulai'            => 'required',
+            'tanggal_keberangkatan'=> 'required|date',
+            'status_ketersediaan'  => 'required|string',
         ]);
 
         $ketersediaan->update($data);

@@ -34,16 +34,10 @@ class TransaksiObserver
                 'status' => $transaksi->transaksi_status
             ]);
 
-            // Jika belum ada ketersediaan, buat
-            if (! $transaksi->ketersediaan()->exists()) {
-                $p     = $transaksi->pemesanan;
-                $mobil = Mobil::find($p->mobil_id);
-
-                Ketersediaan::create([
-                    'pemesanan_id'          => $transaksi->pemesanan_id,
-                    'mobil_id'              => $mobil->mobil_id,
-                    'tanggal_keberangkatan' => $p->tanggal_keberangkatan,
-                    'status_ketersediaan'   => false,
+            // Update status ketersediaan jika sudah ada
+            if ($transaksi->ketersediaan()->exists()) {
+                $transaksi->ketersediaan->update([
+                    'status_ketersediaan' => 'confirmed',
                 ]);
             }
 

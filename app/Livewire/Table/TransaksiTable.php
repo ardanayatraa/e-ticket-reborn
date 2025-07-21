@@ -26,7 +26,7 @@ class TransaksiTable extends DataTableComponent
             'paketWisata.include',
             'paketWisata.exclude',
             'pelanggan',
-            'pemesanan.mobil'
+            'ketersediaan.mobil'
         ])->orderBy('created_at', 'desc');
     }
 
@@ -64,9 +64,9 @@ class TransaksiTable extends DataTableComponent
                 ->sortable()
                 ->format(fn($v, $row) => optional($row->pelanggan)->nama_pemesan ?? '-'),
 
-            Column::make('Mobil', 'pemesanan_id')
+            Column::make('Mobil', 'terpesan_id')
                 ->sortable()
-                ->format(fn($v, $row) => optional($row->pemesanan->mobil)->nama_kendaraan ?? '-'),
+                ->format(fn($v, $row) => optional($row->ketersediaan->mobil)->nama_kendaraan ?? '-'),
 
             Column::make('Jenis Transaksi', 'jenis_transaksi')->sortable(),
 

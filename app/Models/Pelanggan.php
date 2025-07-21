@@ -48,9 +48,9 @@ class Pelanggan extends Authenticatable
     ];
 
     // Relasi
-    public function pemesanans()
+    public function ketersediaans()
     {
-        return $this->hasMany(Pemesanan::class, 'pelanggan_id');
+        return $this->hasMany(Ketersediaan::class, 'pelanggan_id');
     }
 
     public function transaksis()

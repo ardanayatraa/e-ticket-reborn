@@ -5,13 +5,13 @@
             {{-- Header --}}
             <div class="mb-4">
                 <h2 class="text-lg font-semibold border py-4 pl-6 pr-8 text-green-800 flex items-center gap-2">
-                    Edit Pemesanan: {{ $pemesanan->id }}
+                    Edit Pemesanan: {{ $ketersediaan->terpesan_id }}
                 </h2>
             </div>
 
             {{-- Form Card --}}
             <div class="bg-white border dark:bg-gray-800 sm:rounded-lg p-6">
-                <form action="{{ route('pemesanan.update', $pemesanan) }}" method="POST" class="space-y-6">
+                <form action="{{ route('pemesanan.update', $ketersediaan) }}" method="POST" class="space-y-6">
                     @csrf
                     @method('PUT')
 
@@ -26,7 +26,7 @@
                                        focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">
                                 @foreach ($pelanggan as $p)
                                     <option value="{{ $p->pelanggan_id }}"
-                                        {{ old('pemesan_id', $pemesanan->pemesan_id) == $p->pelanggan_id ? 'selected' : '' }}>
+                                        {{ old('pelanggan_id', $ketersediaan->pelanggan_id) == $p->pelanggan_id ? 'selected' : '' }}>
                                         {{ $p->nama_pemesan }}
                                     </option>
                                 @endforeach
@@ -43,7 +43,7 @@
                                        focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">
                                 @foreach ($pakets as $paket)
                                     <option value="{{ $paket->paketwisata_id }}"
-                                        {{ old('paketwisata_id', $pemesanan->paketwisata_id) == $paket->paketwisata_id ? 'selected' : '' }}>
+                                        {{ old('paketwisata_id', $ketersediaan->paketwisata_id) == $paket->paketwisata_id ? 'selected' : '' }}>
                                         {{ $paket->judul }} ({{ $paket->tempat }})
                                     </option>
                                 @endforeach
@@ -61,7 +61,7 @@
 
                                 @foreach ($mobils as $m)
                                     <option value="{{ $m->mobil_id }}"
-                                        {{ old('mobil_id', $pemesanan->mobil_id) == $m->mobil_id ? 'selected' : '' }}>
+                                        {{ old('mobil_id', $ketersediaan->mobil_id) == $m->mobil_id ? 'selected' : '' }}>
                                         {{ $m->nama_kendaraan }} – {{ $m->nomor_kendaraan }}
                                     </option>
                                 @endforeach
@@ -74,7 +74,7 @@
                                 Jam Mulai
                             </label>
                             <input id="jam_mulai" name="jam_mulai" type="time"
-                                value="{{ old('jam_mulai', $pemesanan->jam_mulai) }}" required
+                                value="{{ old('jam_mulai', $ketersediaan->jam_mulai) }}" required
                                 class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                        focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">
                         </div>
@@ -86,7 +86,7 @@
                                 Tanggal Keberangkatan
                             </label>
                             <input id="tanggal_keberangkatan" name="tanggal_keberangkatan" type="date"
-                                value="{{ old('tanggal_keberangkatan', $pemesanan->tanggal_keberangkatan) }}" required
+                                value="{{ old('tanggal_keberangkatan', $ketersediaan->tanggal_keberangkatan) }}" required
                                 class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                        focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">
                         </div>

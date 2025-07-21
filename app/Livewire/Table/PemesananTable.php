@@ -4,24 +4,24 @@ namespace App\Livewire\Table;
 
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
-use App\Models\Pemesanan;
+use App\Models\Ketersediaan;
 use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
 
 class PemesananTable extends DataTableComponent
 {
-    protected $model = Pemesanan::class;
+    protected $model = Ketersediaan::class;
 
     public function configure(): void
     {
-        $this->setPrimaryKey('pemesanan_id');
+        $this->setPrimaryKey('terpesan_id');
     }
 
     public function builder() :Builder
     {
         $today = Carbon::today()->format('Y-m-d');
 
-        return Pemesanan::with(['pelanggan', 'paketWisata', 'mobil'])
+        return Ketersediaan::with(['pelanggan', 'paketWisata', 'mobil'])
             ->orderByRaw("CASE
                 WHEN tanggal_keberangkatan = ? THEN 0
                 WHEN tanggal_keberangkatan > ? THEN 1
@@ -34,7 +34,7 @@ class PemesananTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Pemesanan ID", "pemesanan_id")->sortable(),
+            Column::make("Ketersediaan ID", "terpesan_id")->sortable(),
 
             Column::make("Pelanggan", "pelanggan_id")
                 ->sortable()
@@ -49,6 +49,10 @@ class PemesananTable extends DataTableComponent
                 ->format(fn($v, $row) => optional($row->mobil)->nama_kendaraan ?? '-'),
 
             Column::make("Jam Mulai", "jam_mulai")->sortable(),
+
+            Column::make("Status", "status_ketersediaan")
+                ->sortable()
+                ->format(fn($v, $row) => ucfirst($row->status_ketersediaan)),
 
             Column::make("Tanggal Keberangkatan", "tanggal_keberangkatan")
                 ->sortable()
@@ -74,9 +78,9 @@ class PemesananTable extends DataTableComponent
 
             Column::make('Actions')
                 ->label(fn($row) => view('components.table-action', [
-                    'rowId'     => $row->pemesanan_id,
-                    'editUrl'   => route('pemesanan.edit', $row->pemesanan_id),
-                    'deleteUrl' => route('pemesanan.destroy', $row->pemesanan_id),
+                    'rowId'     => $row->terpesan_id,
+                    'editUrl'   => route('pemesanan.edit', $row->terpesan_id),
+                    'deleteUrl' => route('pemesanan.destroy', $row->terpesan_id),
                 ])->render())
                 ->html(),
         ];

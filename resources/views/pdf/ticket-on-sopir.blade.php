@@ -164,7 +164,7 @@
             $balance = max($totalWithAdd - $deposit, 0);
 
             $sopir = $k->mobil->sopir;
-            $cust = $transaksi->pemesanan->pelanggan;
+            $cust = $k->pelanggan;
         @endphp
 
         <div class="header-center">
@@ -183,7 +183,7 @@
                 <td>
                     Name:
                     <span class="field w-350">
-                        {{ $transaksi->pemesanan->pelanggan->nama_pemesan ?? ('-' ?? '-') }}
+                        {{ $k->pelanggan->nama_pemesan ?? '-' }}
                     </span>
                 </td>
                 <td>
@@ -220,7 +220,7 @@
                 <td colspan="2">
                     Date Activity:
                     <span class="field w-200">
-                        {{ $transaksi->pemesanan->tanggal_keberangkatan ?? '-' }}
+                        {{ $k->tanggal_keberangkatan ?? '-' }}
                     </span>
                 </td>
             </tr>
@@ -255,7 +255,7 @@
                 <td colspan="2">
                     Pick up time:
                     <span class="field w-150">
-                        {{ $transaksi->pemesanan->jam_mulai ?? '-' }}
+                        {{ $k->jam_mulai ?? '-' }}
                     </span>
                 </td>
             </tr>

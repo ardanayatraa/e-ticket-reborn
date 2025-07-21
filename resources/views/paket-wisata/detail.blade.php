@@ -1020,32 +1020,32 @@
                         <div class="lg:col-span-2 bg-gray-50 rounded-xl p-6">
                             <h4 class="text-lg font-bold text-gray-800 mb-4">Riwayat Pemesanan</h4>
 
-                            @if (Auth::guard('pelanggan')->user()->pemesanans->count() > 0)
+                            @if (Auth::guard('pelanggan')->user()->ketersediaans->count() > 0)
                                 <div class="space-y-4 max-h-96 overflow-y-auto">
-                                    @foreach (Auth::guard('pelanggan')->user()->pemesanans->sortByDesc('created_at')->take(10) as $pemesanan)
+                                    @foreach (Auth::guard('pelanggan')->user()->ketersediaans->sortByDesc('created_at')->take(10) as $ketersediaan)
                                         <div class="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
                                             <div class="flex justify-between items-start mb-3">
                                                 <div class="flex-1">
                                                     <h5 class="font-semibold text-gray-800 text-base">
-                                                        {{ $pemesanan->paketWisata->judul }}
+                                                        {{ $ketersediaan->paketWisata->judul }}
                                                     </h5>
                                                     <p class="text-sm text-gray-600 mt-1">
                                                         <i class="fas fa-calendar mr-1"></i>
-                                                        {{ \Carbon\Carbon::parse($pemesanan->tanggal_keberangkatan)->format('d M Y') }}
+                                                        {{ \Carbon\Carbon::parse($ketersediaan->tanggal_keberangkatan)->format('d M Y') }}
                                                         <span class="ml-3">
                                                             <i class="fas fa-clock mr-1"></i>
-                                                            {{ $pemesanan->jam_mulai }}
+                                                            {{ $ketersediaan->jam_mulai }}
                                                         </span>
                                                     </p>
                                                 </div>
                                                 <div class="text-right">
-                                                    @if ($pemesanan->transaksi && $pemesanan->transaksi->transaksi_status == 'paid')
+                                                    @if ($ketersediaan->transaksi && $ketersediaan->transaksi->transaksi_status == 'paid')
                                                         <span
                                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                             <i class="fas fa-check-circle mr-1"></i>
                                                             Lunas
                                                         </span>
-                                                    @elseif($pemesanan->transaksi && $pemesanan->transaksi->transaksi_status == 'pending')
+                                                    @elseif($ketersediaan->transaksi && $ketersediaan->transaksi->transaksi_status == 'pending')
                                                         <span
                                                             class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                                             <i class="fas fa-clock mr-1"></i>
@@ -1065,29 +1065,29 @@
                                                 <div>
                                                     <span class="text-gray-500">Mobil:</span>
                                                     <p class="font-medium text-gray-800">
-                                                        {{ $pemesanan->mobil->nama_kendaraan ?? 'N/A' }}</p>
+                                                        {{ $ketersediaan->mobil->nama_kendaraan ?? 'N/A' }}</p>
                                                 </div>
                                                 <div>
                                                     <span class="text-gray-500">Peserta:</span>
                                                     <p class="font-medium text-gray-800">
-                                                        {{ $pemesanan->transaksi->jumlah_peserta }}
+                                                        {{ $ketersediaan->transaksi->jumlah_peserta }}
                                                         orang</p>
                                                 </div>
                                                 <div>
                                                     <span class="text-gray-500">Total Harga:</span>
                                                     <p class="font-semibold text-teal-600">
                                                         Rp
-                                                        {{ number_format($pemesanan->transaksi->total_transaksi ?? $pemesanan->paketWisata->harga, 0, ',', '.') }}
+                                                        {{ number_format($ketersediaan->transaksi->total_transaksi ?? $ketersediaan->paketWisata->harga, 0, ',', '.') }}
                                                     </p>
                                                 </div>
                                                 <div>
                                                     <span class="text-gray-500">Tanggal Pesan:</span>
                                                     <p class="font-medium text-gray-800">
-                                                        {{ $pemesanan->created_at->format('d M Y') }}</p>
+                                                        {{ $ketersediaan->created_at->format('d M Y') }}</p>
                                                 </div>
                                             </div>
 
-                                            @if ($pemesanan->transaksi && $pemesanan->transaksi->transaksi_status == 'paid')
+                                            @if ($ketersediaan->transaksi && $ketersediaan->transaksi->transaksi_status == 'paid')
                                                 <div class="mt-3 pt-3 border-t border-gray-200">
                                                     <div class="flex items-center justify-between">
                                                         <span class="text-sm text-green-600 font-medium flex items-center">
@@ -1095,16 +1095,16 @@
                                                             E-ticket tersedia
 
                                                             <!-- Tombol download -->
-                                                            <a href="{{ route('download.eticket', ['transaksi' => $pemesanan->transaksi->transaksi_id]) }}"
+                                                            <a href="{{ route('download.eticket', ['transaksi' => $ketersediaan->transaksi->transaksi_id]) }}"
                                                                 class="ml-3 text-sm text-white bg-green-500 hover:bg-green-600 px-3 py-1 rounded inline-flex items-center"
                                                                 target="_blank">
                                                                 <i class="fas fa-download mr-1"></i> Download
                                                             </a>
                                                         </span>
 
-                                                        @if (Auth::guard('pelanggan')->user()->is_member && $pemesanan->transaksi->deposit)
+                                                        @if (Auth::guard('pelanggan')->user()->is_member && $ketersediaan->transaksi->deposit)
                                                             @php
-                                                                $pointsEarned = \App\Models\PointSetting::calculateEarnedPoints($pemesanan->transaksi->deposit);
+                                                                $pointsEarned = \App\Models\PointSetting::calculateEarnedPoints($ketersediaan->transaksi->deposit);
                                                             @endphp
                                                             @if ($pointsEarned > 0)
                                                                 <span class="text-sm text-blue-600 font-medium">

@@ -56,23 +56,23 @@
                         @enderror
                     </div>
 
-                    {{-- Pemesanan --}}
+                    {{-- Ketersediaan --}}
                     <div>
-                        <label for="pemesanan_id" class="block font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Pemesanan
+                        <label for="terpesan_id" class="block font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Ketersediaan
                         </label>
-                        <select id="pemesanan_id" name="pemesanan_id" required
+                        <select id="terpesan_id" name="terpesan_id" required
                             class="block w-full border border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200
                                    focus:ring-2 focus:ring-green-500 focus:border-green-500 rounded-lg p-2 transition">
-                            <option value="">-- Pilih Pesanan --</option>
+                            <option value="">-- Pilih Ketersediaan --</option>
                             @foreach ($pesanan as $order)
-                                <option value="{{ $order->pemesanan_id }}"
-                                    {{ old('pemesanan_id', $transaksi->pemesanan_id) == $order->pemesanan_id ? 'selected' : '' }}>
-                                    {{ $order->kode_booking ?? $order->pemesanan_id }}
+                                <option value="{{ $order->terpesan_id }}"
+                                    {{ old('terpesan_id', $transaksi->terpesan_id) == $order->terpesan_id ? 'selected' : '' }}>
+                                    {{ $order->kode_booking ?? $order->terpesan_id }}
                                 </option>
                             @endforeach
                         </select>
-                        @error('pemesanan_id')
+                        @error('terpesan_id')
                             <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                         @enderror
                     </div>

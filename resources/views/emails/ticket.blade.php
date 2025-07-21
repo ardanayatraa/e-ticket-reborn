@@ -90,7 +90,7 @@
             </tr>
             <tr>
                 <td><strong>Tanggal Keberangkatan:</strong></td>
-                <td>{{ \Carbon\Carbon::parse($transaksi->pemesanan->tanggal_keberangkatan)->format('d M Y') ?? '-' }}
+                <td>{{ \Carbon\Carbon::parse($transaksi->ketersediaan->tanggal_keberangkatan)->format('d M Y') ?? '-' }}
                 </td>
             </tr>
             <tr>

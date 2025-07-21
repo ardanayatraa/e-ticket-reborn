@@ -8,7 +8,7 @@ use App\Mail\SendTicket;
 use App\Models\Transaksi;
 use App\Models\PaketWisata;
 use App\Models\Pelanggan;
-use App\Models\Pemesanan;
+use App\Models\Ketersediaan;
 use Illuminate\Http\Request;
 use App\Models\IncludeModel;
 use App\Models\Exclude;
@@ -23,7 +23,7 @@ class TransaksiController extends Controller
      */
     public function index()
     {
-        $transaksis = Transaksi::with(['paketWisata', 'pelanggan', 'pemesanan'])->get();
+        $transaksis = Transaksi::with(['paketWisata', 'pelanggan', 'ketersediaan'])->get();
         return view('transaksi.index', compact('transaksis'));
     }
 
@@ -34,9 +34,9 @@ class TransaksiController extends Controller
     {
         $pakets     = PaketWisata::all();
         $pelanggans = Pelanggan::all();
-        $pesanan  = Pemesanan::all();
+        $ketersediaan  = Ketersediaan::all();
 
-        return view('transaksi.create', compact('pakets', 'pelanggans', 'pesanan'));
+        return view('transaksi.create', compact('pakets', 'pelanggans', 'ketersediaan'));
     }
 
     /**
@@ -46,8 +46,7 @@ class TransaksiController extends Controller
     {
         $data = $request->validate([
             'paketwisata_id'   => 'required|exists:paket_wisatas,paketwisata_id',
-            'pelanggan_id'     => 'required|exists:pelanggans,pelanggan_id',
-            'pemesanan_id'     => 'required|exists:pemesanans,pemesanan_id',
+            'terpesan_id'      => 'required|exists:ketersediaans,terpesan_id',
             'jenis_transaksi'  => 'required|string|max:255',
             'deposit'          => 'required|numeric|min:0',
             'balance'          => 'required|numeric|min:0',
@@ -80,9 +79,9 @@ class TransaksiController extends Controller
     {
         $pakets     = PaketWisata::all();
         $pelanggans = Pelanggan::all();
-        $pesanan  = Pemesanan::all();
+        $ketersediaan  = Ketersediaan::all();
 
-        return view('transaksi.edit', compact('transaksi', 'pakets', 'pelanggans', 'pesanan'));
+        return view('transaksi.edit', compact('transaksi', 'pakets', 'pelanggans', 'ketersediaan'));
     }
 
     /**
@@ -245,7 +244,7 @@ class TransaksiController extends Controller
             'totalPelanggan' => \App\Models\Pelanggan::count(),
             'totalPaket'     => \App\Models\PaketWisata::count(),
             'totalMobil'     => \App\Models\Mobil::count(),
-            'totalPemesanan' => \App\Models\Pemesanan::count(),
+            'totalPemesanan' => \App\Models\Ketersediaan::count(),
         ]);
     }
 }

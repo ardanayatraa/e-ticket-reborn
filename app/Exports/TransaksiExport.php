@@ -26,7 +26,7 @@ class TransaksiExport implements FromCollection, WithMapping, WithHeadings, Shou
     {
         return empty($this->selectedIds)
             ? collect()
-            : Transaksi::with(['pemesanan.mobil.sopir', 'pelanggan', 'paketWisata'])
+            : Transaksi::with(['ketersediaan.mobil.sopir', 'pelanggan', 'paketWisata'])
                 ->whereIn('transaksi_id', $this->selectedIds)
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -68,12 +68,12 @@ class TransaksiExport implements FromCollection, WithMapping, WithHeadings, Shou
 
         return [
             $t->transaksi_id,
-            optional($t->pemesanan)->created_at?->format('Y-m-d') ?? '',
-            optional($t->pemesanan)->tanggal_keberangkatan ?? '',
+            optional($t->ketersediaan)->created_at?->format('Y-m-d') ?? '',
+            optional($t->ketersediaan)->tanggal_keberangkatan ?? '',
             optional($t->pelanggan)->nama_pemesan ?? '-',
             $t->jumlah_peserta ?? 0,
             optional($t->pelanggan)->alamat ?? '-',
-            optional($t->pemesanan?->mobil?->sopir)->nama_sopir ?? '-',
+            optional($t->ketersediaan?->mobil?->sopir)->nama_sopir ?? '-',
             optional($t->paketWisata)->judul ?? '-',
             $totalAmount,
             $additionalCharge,

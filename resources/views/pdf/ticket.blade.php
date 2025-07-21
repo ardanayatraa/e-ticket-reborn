@@ -179,12 +179,12 @@
             <tr>
                 <td>Name:
                     <span class="field w-350">
-                        {{ $transaksi->pemesanan->pelanggan->nama_pemesan ?? '-' }}
+                        {{ $transaksi->ketersediaan->pelanggan->nama_pemesan ?? '-' }}
                     </span>
                 </td>
                 <td>Phone No.:
                     <span class="field w-200">
-                        {{ $transaksi->pemesanan->pelanggan->nomor_whatsapp ?? '-' }}
+                        {{ $transaksi->ketersediaan->pelanggan->nomor_whatsapp ?? '-' }}
                     </span>
                 </td>
             </tr>
@@ -196,8 +196,8 @@
                 </td>
                 <td>Provider:
                     <span class="field w-300">
-                        {{ $transaksi->pemesanan->mobil->nama_kendaraan ?? '-' }} /
-                        {{ $transaksi->pemesanan->mobil->sopir->nama_sopir ?? '-' }}
+                        {{ $transaksi->ketersediaan->mobil->nama_kendaraan ?? '-' }} /
+                        {{ $transaksi->ketersediaan->mobil->sopir->nama_sopir ?? '-' }}
                     </span>
                 </td>
             </tr>
@@ -211,7 +211,7 @@
             <tr>
                 <td colspan="2">Date Activity:
                     <span class="field w-200">
-                        {{ $transaksi->pemesanan->tanggal_keberangkatan ?? '-' }}
+                        {{ $transaksi->ketersediaan->tanggal_keberangkatan ?? '-' }}
                     </span>
                 </td>
             </tr>
@@ -234,14 +234,14 @@
             <tr>
                 <td colspan="2">Accommodation:
                     <span class="field w-150">
-                        {{ $transaksi->pemesanan->pelanggan->alamat ?? '-' }}
+                        {{ $transaksi->ketersediaan->pelanggan->alamat ?? '-' }}
                     </span>
                 </td>
             </tr>
             <tr>
                 <td colspan="2">Pick up time:
                     <span class="field w-150">
-                        {{ $transaksi->pemesanan->jam_mulai ?? '-' }}
+                        {{ $transaksi->ketersediaan->jam_mulai ?? '-' }}
                     </span>
                 </td>
             </tr>

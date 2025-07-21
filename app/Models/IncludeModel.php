@@ -26,4 +26,6 @@ class IncludeModel extends Model
     {
         return $this->belongsTo(PaketWisata::class, 'paketwisata_id', 'paketwisata_id');
     }
+
+
 }
