@@ -116,7 +116,7 @@ class PaketWisataController extends Controller
     /**
      * Display the specified paket wisata
      */
-    public function show(string $slug)
+    public function show(Request $request, string $slug)
     {
         try {
             $paket = PaketWisata::where('slug', $slug)
