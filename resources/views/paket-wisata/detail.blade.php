@@ -1690,7 +1690,7 @@
         // Global variables
         const urlStorage = "{{ asset('storage') }}";
         const urlApi = "{{ route('check-availability') }}";
-        const isLoggedIn = {{ Auth::guard('pelanggan')->check() ? 'true' : 'false' }};
+        const isLoggedIn = @json(Auth::guard('pelanggan')->check());
         const currentUser = @json(Auth::guard('pelanggan')->user());
 
         // State untuk menyimpan pilihan
