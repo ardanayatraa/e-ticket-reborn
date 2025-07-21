@@ -14,6 +14,7 @@
     <!-- Midtrans Snap -->
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
     </script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
