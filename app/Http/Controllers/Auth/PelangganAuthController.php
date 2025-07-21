@@ -41,24 +41,20 @@ class PelangganAuthController extends Controller
     public function register(Request $request)
     {
         try {
-            // Manual captcha verification first
-            $captchaResponse = $request->input('g-recaptcha-response');
-            
-            if (empty($captchaResponse)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Silakan lengkapi CAPTCHA terlebih dahulu.'
-                ], 422);
-            }
-
-            // Verify reCAPTCHA
-            if (!NoCaptcha::verifyResponse($captchaResponse)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Verifikasi CAPTCHA gagal. Silakan coba lagi.'
-                ], 422);
-            }
-
+            // NONAKTIFKAN CAPTCHA
+            // $captchaResponse = $request->input('g-recaptcha-response');
+            // if (empty($captchaResponse)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Silakan lengkapi CAPTCHA terlebih dahulu.'
+            //     ], 422);
+            // }
+            // if (!NoCaptcha::verifyResponse($captchaResponse)) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'Verifikasi CAPTCHA gagal. Silakan coba lagi.'
+            //     ], 422);
+            // }
             $validatedData = $request->validate([
                 'nama_pemesan' => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:pelanggans',
@@ -77,19 +73,16 @@ class PelangganAuthController extends Controller
             throw $e;
         } catch (\Exception $e) {
             \Log::error('Registration error: ' . $e->getMessage());
-            
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.'
                 ], 500);
             }
-            
             return back()->withErrors([
                 'general' => 'Terjadi kesalahan saat mendaftar. Silakan coba lagi.'
             ])->withInput();
         }
-
         $pelanggan = Pelanggan::create([
             'nama_pemesan' => $validatedData['nama_pemesan'],
             'email' => $validatedData['email'],
@@ -97,10 +90,11 @@ class PelangganAuthController extends Controller
             'alamat' => $validatedData['alamat'],
             'nomor_whatsapp' => $validatedData['nomor_whatsapp'],
         ]);
-
         Auth::guard('pelanggan')->login($pelanggan);
-
-        return redirect('/')->with('success', 'Registrasi berhasil!');
+        return response()->json([
+            'success' => true,
+            'message' => 'Registrasi berhasil!'
+        ]);
     }
 
     public function logout(Request $request)

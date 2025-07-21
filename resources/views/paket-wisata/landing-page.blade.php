@@ -905,9 +905,6 @@
                             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                     </div>
 
-                    <!-- reCAPTCHA -->
-                    <div class="g-recaptcha" data-sitekey="{{ config('app.recaptcha.site_key') }}"></div>
-
                     <button type="submit" id="tombolRegister"
                         class="w-full bg-gradient-to-r from-teal-500 to-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-200">
                         <i class="fas fa-user-plus mr-2"></i>
