@@ -2561,14 +2561,20 @@
         }
 
         function perbaruiKetersediaanKendaraan(idKendaraanTersedia) {
+            // Patch: pastikan idKendaraanTersedia adalah array
+            if (!Array.isArray(idKendaraanTersedia)) {
+                idKendaraanTersedia = Object.values(idKendaraanTersedia);
+            }
+            // Patch: pastikan semua id jadi string untuk perbandingan konsisten
+            idKendaraanTersedia = idKendaraanTersedia.map(String);
+
             const tombolKendaraan = document.querySelectorAll('.tombol-kendaraan');
             const pesanTidakAdaMobil = document.getElementById('pesanTidakAdaMobil');
             const daftarKendaraan = document.getElementById('daftarKendaraan');
             let adaKendaraanTersedia = false;
 
             tombolKendaraan.forEach(btn => {
-                const idKendaraan = parseInt(btn.dataset.id);
-
+                const idKendaraan = btn.dataset.id;
                 if (idKendaraanTersedia.includes(idKendaraan)) {
                     btn.style.display = 'flex';
                     btn.disabled = false;
