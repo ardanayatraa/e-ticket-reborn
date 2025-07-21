@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="//unpkg.com/alpinejs" defer></script>
-    <!-- reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <!-- Midtrans Snap -->
     <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}">
     </script>
@@ -1845,18 +1843,7 @@
         document.getElementById('formRegister').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            // Validate reCAPTCHA
-            const recaptchaResponse = grecaptcha.getResponse();
-            if (!recaptchaResponse) {
-                const registerError = document.getElementById('registerError');
-                registerError.querySelector('p').textContent = 'Silakan lengkapi CAPTCHA terlebih dahulu.';
-                registerError.classList.remove('hidden');
-                return;
-            }
-
             const formData = new FormData(this);
-            formData.set('g-recaptcha-response', recaptchaResponse);
-            
             const tombolRegister = document.getElementById('tombolRegister');
             const registerError = document.getElementById('registerError');
 
@@ -1881,12 +1868,10 @@
                     registerError.querySelector('p').textContent = data.message ||
                         'Terjadi kesalahan saat mendaftar.';
                     registerError.classList.remove('hidden');
-                    grecaptcha.reset();
                 }
             } catch (error) {
                 registerError.querySelector('p').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
                 registerError.classList.remove('hidden');
-                grecaptcha.reset();
             } finally {
                 tombolRegister.disabled = false;
                 tombolRegister.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Daftar';
