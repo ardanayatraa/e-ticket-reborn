@@ -2551,7 +2551,9 @@
                 .then(response => response.json())
                 .then(data => {
                     indikatorLoadingTanggal.classList.add('hidden');
-                    perbaruiKetersediaanKendaraan(data || []);
+                    // Ambil dari property available_mobil_ids jika ada
+                    const ids = Array.isArray(data) ? data : (data.available_mobil_ids || []);
+                    perbaruiKetersediaanKendaraan(ids);
                 })
                 .catch(error => {
                     console.error('Error saat mengecek ketersediaan:', error);
